@@ -1,0 +1,67 @@
+# Predictive Logistics & Forward Supply Chain (SIH PS 26251)
+# Prototype uses fictional synthetic logistics data and is intended for decision-support demonstration only.
+#   docker compose up --build        ->  UI http://localhost:8080 · API http://localhost:8000/docs
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: logistics
+      POSTGRES_USER: logistics
+      POSTGRES_PASSWORD: logistics
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # executed once, on first start of an empty data volume
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+    restart: unless-stopped
+    healthcheck:
+      # -h 127.0.0.1 forces a TCP check; the image's first-run init server listens on the unix socket only,
+      # so a socket-based check could report "ready" before schema.sql/seed.sql have finished.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U logistics -d logistics"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://logistics:logistics@db:5432/logistics
+      CORS_ORIGINS: http://localhost:8080,http://localhost:5173
+      DB_DIR: /db
+      AUTO_INIT_DB: "1"
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/health').status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    # service_started (not service_healthy): a slow backend must not abort `docker compose up` or keep the UI down.
+    # nginx resolves the backend lazily, so the UI loads immediately and shows "Backend unavailable" until the API is ready.
+    depends_on:
+      backend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata:

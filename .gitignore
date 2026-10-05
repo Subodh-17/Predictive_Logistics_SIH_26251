@@ -1,0 +1,26 @@
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.env
+# Secrets
+secrets/
+*.key
+*.pem
+credentials.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Test/Coverage
+.coverage
+coverage.xml
+htmlcov/
+
+# Logs
+*.log

@@ -1,0 +1,41 @@
+== extracted tree: <extracted-copy>
+A1 clean venv: pip install -r backend/requirements.txt  exit=0
+A2 npm ci (lockfile)  exit=0  added 177 packages in 4s
+A3 TypeScript tsc -b --noEmit  exit=0
+A4 vite production build  exit=0  ✓ built in 19.01s
+A5 pytest (DB up, REQUIRE_DB=1): 70 passed, 1 warning in 3.46s
+A6 pytest -m db (the 10 DB tests only): 10 passed, 60 deselected, 1 warning in 2.98s
+A7 pytest -m 'not db': 60 passed, 10 deselected in 0.64s
+A8 pytest, DB DOWN, default mode: 60 passed, 10 skipped in 0.62s
+A9 pytest, DB DOWN, REQUIRE_DB=1: 60 passed, 10 errors in 0.64s
+A10 backend health (extracted copy, venv): HTTP 200
+A11 V3 parity (original JS vs fixture vs Python engine): exit=0  V3 PARITY: PASS
+A12 API sweep: exit=0  --- 24 operations in the OpenAPI spec ; API SWEEP: PASS
+A13 nginx -t (shipped config): nginx: configuration file /etc/nginx/nginx.conf test is successful
+A14 nginx COLD START, backend not running + name unresolvable: nginx procs=2 | GET / 200 | /healthz 200 | /api/health 502 (502 expected)
+A15 backend appears later, nginx NOT restarted: /api/health HTTP 200 after 3s
+A16 backend killed: /api/health 502 (502 expected) | / 200 (200 expected)
+A17 backend recreated on NEW IP (old 127.0.0.1:8000 -> HTTP 000): via nginx HTTP 200 after 7s
+A18 frontend->backend health check via nginx: HTTP 200 ; nginx liveness /healthz HTTP 200
+B1 docker compose config -q: exit=0
+B2 Dockerfile/compose referenced paths exist: exit=0 missing: []
+C1 docker daemon:  Server Version: 29.1.3
+C2 docker pull postgis/postgis:16-3.4: exit=1 -> Error response from daemon: unknown: failed to resolve reference "docker.io/postgis/postgis:16-3.4": unexpected status from HEAD request to https://registry-1.docker.io/v2/postgis/postgis/manifests/16
+C3 docker compose up --build: NOT RUN (images cannot be pulled/built in this environment)
+A19 E2E exit code: 0
+================ E2E SUMMARY ================
+base URL          : http://localhost:80
+browser           : chromium 141.0.7390.37 (headless)
+viewports         : 1440x1000 (desktop), 390x844 (mobile)
+tests collected   : 73
+passed            : 73
+failed            : 0
+skipped           : 0
+screens tested    : Dashboard (16 checks) | Forecast (6 checks) | GIS (6 checks) | Inventory (5 checks) | Simulation (7 checks)  (+ per-screen mobile, placeholder and dead-control checks)
+Leaflet rendered  : YES  | What-If simulation worked: YES  | IoT update worked: YES  | Allocation worked: YES  | 390px layout tested: YES
+OSM tiles         : 126 tile requests blocked by the sandbox (real OSM imagery NOT verified)
+A20 UI-enhancement E2E exit code: 0
+================ UI ENHANCEMENT E2E SUMMARY ================
+base URL: http://localhost:80 | browser: chromium 141.0.7390.37 (headless)
+tests collected: 91 | passed: 91 | failed: 0 | skipped: 0
+== DONE

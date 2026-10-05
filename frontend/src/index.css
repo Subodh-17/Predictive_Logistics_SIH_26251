@@ -1,0 +1,49 @@
+@import 'leaflet/dist/leaflet.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---- Theme tokens (space-separated RGB). Dark is the default and keeps the original command-centre look. ---- */
+:root, html[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: 11 17 16;   --pn: 18 28 26;   --pn2: 22 34 31;  --ln: 36 51 47;   --tx: 214 226 220; --mu: 127 148 139; --hi: 255 255 255;
+  --ac: 201 164 76; --act: 201 164 76; --onac: 17 17 17;
+  --ok: 63 191 127; --wr: 224 184 58; --cr: 229 83 75;
+  --ins: 23 31 29;  --hov: 24 36 32;  --rowln: 26 38 35; --bar: 28 41 38; --side: 14 22 20; --soft: 185 203 194;
+  --errbg: 42 20 19; --errtx: 240 181 176; --warnbg: 42 36 16; --footbg: 26 22 8;
+  --wrf: 224 184 58;
+  --map-bg: #0d1614;
+}
+/* Light theme: text/status colours are darkened so every text pair is >= 4.5:1 (WCAG AA) while GREEN / AMBER-YELLOW / RED keep their meaning. */
+html[data-theme='light'] {
+  color-scheme: light;
+  --bg: 236 241 238; --pn: 255 255 255; --pn2: 243 246 244; --ln: 176 190 183; --tx: 20 32 27; --mu: 71 89 80; --hi: 8 16 12;
+  --ac: 184 140 28; --act: 122 88 0; --onac: 17 17 17;
+  --ok: 18 117 70; --wr: 143 95 0; --cr: 179 38 30;
+  --ins: 238 243 240; --hov: 228 235 231; --rowln: 218 227 222; --bar: 214 223 218; --side: 226 233 229; --soft: 48 66 57;
+  --errbg: 253 236 234; --errtx: 122 21 15; --warnbg: 255 243 208; --footbg: 255 247 222;
+  --wrf: 184 130 0;
+  --map-bg: #dfe7e3;
+}
+
+html, body, #root { min-height: 100%; }
+body { @apply bg-bg text-tx font-sans text-[13px] leading-[1.45] m-0; }
+th { @apply font-mono text-[10px] tracking-[.08em] text-mu text-left font-semibold px-2 py-1.5 border-b border-ln whitespace-nowrap; }
+td { @apply px-2 py-1.5 border-b border-rowln whitespace-nowrap; }
+table { @apply w-full border-collapse; font-variant-numeric: tabular-nums; }
+tr.row { @apply cursor-pointer hover:bg-hov; }
+tr.sel { @apply bg-hov; }
+select, input[type=text], input[type=number] { @apply bg-pn2 text-tx border border-ln px-2 py-1.5 text-[13px]; }
+input[type=range] { @apply w-full; accent-color: rgb(var(--ac)); }
+:focus-visible { outline: 2px solid rgb(var(--act)); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .animate-spin { animation: none; } }
+
+.leaflet-container { background: var(--map-bg); font: inherit; }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: rgb(var(--pn)); color: rgb(var(--tx)); border: 1px solid rgb(var(--ln)); border-radius: 2px; }
+.leaflet-popup-content { margin: 10px 12px; font-size: 12px; }
+.leaflet-tooltip { background: rgb(var(--pn)); color: rgb(var(--tx)); border: 1px solid rgb(var(--ln)); }
+.depot-icon { width: 14px; height: 14px; background: rgb(var(--ac)); border: 1px solid #111; }
+.route-arrow { font-size: 15px; line-height: 15px; text-align: center; text-shadow: 0 0 3px rgb(var(--pn)), 0 0 3px rgb(var(--pn)); pointer-events: none; }
+.route-label { white-space: nowrap; font: 600 10px/1 ui-monospace, Menlo, Consolas, monospace; padding: 2px 5px; border: 1px solid currentColor; background: rgb(var(--pn)); color: rgb(var(--tx)); pointer-events: none; }
+.recharts-text { fill: rgb(var(--mu)); font-size: 10px; }
+.recharts-legend-item-text { color: rgb(var(--mu)) !important; font-size: 11px; }

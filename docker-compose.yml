@@ -1,0 +1,107 @@
+# Predictive Logistics & Forward Supply Chain (SIH PS 26251)
+# Illustrative scenario: fictional locations and simulated telemetry, not operational records. Decision support only.
+#
+#   python scripts/generate_env.py      # writes .env with freshly generated secrets (never overwrites an existing .env)
+#   docker compose up --build           # UI http://localhost:8080
+#
+# Secrets have NO defaults: `docker compose up` stops with a clear message if a required secret is missing.
+# Database roles: the administrative role only initialises the volume (roles + PostGIS); `plsd_owner` (not a superuser) runs migrations in the one-shot
+# `migrate` service; the API runs as `plsd_app` (data access only, no DDL). The database and API are not published on the host; only the web container is (8080).
+x-app-env: &app-env
+  # "production" (default) needs HTTPS or localhost for the Secure session cookie. For plain-HTTP use on another machine set APP_ENV=development.
+  APP_ENV: ${APP_ENV:-production}
+  DATABASE_URL: "postgresql+psycopg://plsd_app:${APP_DB_PASSWORD:?APP_DB_PASSWORD is required - run python scripts/generate_env.py}@db:5432/logistics"
+  JWT_SECRET: "${JWT_SECRET:?JWT_SECRET is required - run python scripts/generate_env.py}"
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+  FORECAST_MODEL_MODE: ${FORECAST_MODEL_MODE:-auto}     # auto | ml | statistical (see ml/README.md)
+  ML_FORECAST_SHA256: ${ML_FORECAST_SHA256:-}
+  ML_SHORTAGE_SHA256: ${ML_SHORTAGE_SHA256:-}
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: logistics
+      POSTGRES_USER: plsd_admin                 # administrative role: used only by the one-time init script below, never by the application
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required - run python scripts/generate_env.py}"
+      OWNER_DB_PASSWORD: "${OWNER_DB_PASSWORD:?OWNER_DB_PASSWORD is required - run python scripts/generate_env.py}"
+      APP_DB_PASSWORD: "${APP_DB_PASSWORD:?APP_DB_PASSWORD is required - run python scripts/generate_env.py}"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro   # roles + PostGIS only (first start of an empty volume); tables come from the migrations
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      # -h 127.0.0.1 forces a TCP check; the image's first-run init server listens on the unix socket only
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U plsd_admin -d logistics"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    # one-shot release step: migrations -> least-privilege grants -> (optional) scenario seed, all as the owner role. Safe to re-run on every `up`.
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: plsd-backend:local
+    environment:
+      <<: *app-env
+      MIGRATION_DATABASE_URL: "postgresql+psycopg://plsd_owner:${OWNER_DB_PASSWORD:?OWNER_DB_PASSWORD is required}@db:5432/logistics"
+      AUTO_SEED_SCENARIO: ${AUTO_SEED_SCENARIO:-1}   # loads the fictional illustrative scenario into an EMPTY database; 0 = you provide the data
+    command: ["sh", "-c", "python -m app.cli migrate && python -m app.cli grant-app-role plsd_app && if [ \"$$AUTO_SEED_SCENARIO\" = \"1\" ]; then python -m app.cli seed-scenario; fi && python -m app.cli grant-app-role plsd_app"]
+    restart: "no"
+    read_only: true
+    tmpfs: ["/tmp"]
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: plsd-backend:local
+    environment:
+      <<: *app-env
+      AUTO_MIGRATE: "0"                          # the API only VERIFIES the schema version (read-only); it holds no owner credentials
+      AUTO_SEED_SCENARIO: "0"
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      TRUSTED_PROXY_HOPS: "1"                    # the web container is the single trusted proxy in front of the API
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp"]
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    expose: ["8000"]
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      BACKEND_HOSTPORT: backend:8000
+      TRUSTED_PROXY_CIDR: ${TRUSTED_PROXY_CIDR:-127.0.0.1/32}   # set to your load balancer's range ONLY if one sits in front of this container
+    restart: unless-stopped
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    # service_started (not service_healthy): a slow backend must not abort `docker compose up` or keep the UI down.
+    depends_on:
+      backend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:

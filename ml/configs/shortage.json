@@ -1,0 +1,10 @@
+{
+  "seed": 42,
+  "horizon_days": 7,
+  "split": {"train": 0.70, "val": 0.15, "test": 0.15, "val_calibration_fraction": 0.5},
+  "sampling": {"train_rows": 600000},
+  "population": "item-days with no backlog at the origin day (shortage onset)",
+  "lightgbm": {"grid": {"num_leaves": [7, 15, 31]}, "fixed": {"objective": "binary", "learning_rate": 0.05, "n_estimators": 800,
+               "min_child_samples": 200, "feature_fraction": 0.8, "bagging_fraction": 0.8, "bagging_freq": 1, "lambda_l2": 5.0, "n_jobs": 1, "verbose": -1},
+               "early_stopping_rounds": 50}
+}

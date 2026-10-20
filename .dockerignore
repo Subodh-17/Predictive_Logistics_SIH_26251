@@ -1,0 +1,11 @@
+.env
+.env.*
+**/node_modules
+**/dist
+**/__pycache__
+.git
+docs
+legacy
+tests
+backend/tests
+*.zip

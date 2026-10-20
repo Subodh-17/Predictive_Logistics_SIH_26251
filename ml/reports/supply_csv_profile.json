@@ -1,0 +1,145 @@
+{
+  "rows": 36000,
+  "columns": [
+    "Quantity Sold (units)",
+    "Product Category",
+    "Month",
+    "Average Temperature (\u00b0C)",
+    "Monthly Precipitation (mm)",
+    "Route (ID)",
+    "Route Distance (km)",
+    "Average Transit Time (hrs)",
+    "Cost per Kilometer ($)",
+    "Traffic Conditions"
+  ],
+  "duplicate_rows": 0,
+  "temporal_columns": [
+    "Month (1-12 only)"
+  ],
+  "has_date_or_year": false,
+  "has_item_or_sku_identifier": false,
+  "has_location_identifier": false,
+  "route_ids": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "rows_per_month": {
+    "1": 3720,
+    "2": 2904,
+    "3": 2976,
+    "4": 2880,
+    "5": 2976,
+    "6": 2880,
+    "7": 2976,
+    "8": 2976,
+    "9": 2880,
+    "10": 2976,
+    "11": 2880,
+    "12": 2976
+  },
+  "numeric_vs_uniform": {
+    "Quantity Sold (units)": {
+      "min": 450.0,
+      "max": 599.0,
+      "mean": 524.2137777777778,
+      "std": 43.31646619365634,
+      "uniform_ks_stat": 0.009148396718866525,
+      "uniform_ks_p": 0.004800983553945117,
+      "std_if_uniform": 43.01259505462712
+    },
+    "Average Temperature (\u00b0C)": {
+      "min": 15.0,
+      "max": 35.0,
+      "mean": 24.988892777777778,
+      "std": 5.787430807520443,
+      "uniform_ks_stat": 0.004722222222222211,
+      "uniform_ks_p": 0.39708642616784806,
+      "std_if_uniform": 5.773502691896258
+    },
+    "Monthly Precipitation (mm)": {
+      "min": 0.0,
+      "max": 99.99,
+      "mean": 49.900775833333334,
+      "std": 28.861227807018853,
+      "uniform_ks_stat": 0.0030367536753674873,
+      "uniform_ks_p": 0.8931245906429686,
+      "std_if_uniform": 28.86462670813534
+    },
+    "Route Distance (km)": {
+      "min": 5.0,
+      "max": 50.0,
+      "mean": 27.583058333333334,
+      "std": 12.971454769862833,
+      "uniform_ks_stat": 0.006444444444444475,
+      "uniform_ks_p": 0.1001079733700172,
+      "std_if_uniform": 12.99038105676658
+    },
+    "Average Transit Time (hrs)": {
+      "min": 1.0,
+      "max": 5.0,
+      "mean": 2.9968136111111114,
+      "std": 1.1547627821491995,
+      "uniform_ks_stat": 0.005611111111111122,
+      "uniform_ks_p": 0.2062666862860365,
+      "std_if_uniform": 1.1547005383792517
+    },
+    "Cost per Kilometer ($)": {
+      "min": 8.0,
+      "max": 15.0,
+      "mean": 11.498969722222222,
+      "std": 2.010631565281287,
+      "uniform_ks_stat": 0.00508730158730164,
+      "uniform_ks_p": 0.3080934887376401,
+      "std_if_uniform": 2.0207259421636903
+    }
+  },
+  "max_abs_pairwise_correlation": 0.010844611146301399,
+  "month_effects": {
+    "Quantity Sold (units)": {
+      "one_way_anova_F": 1.104202443350935,
+      "p": 0.35279200035875236,
+      "mean_range_across_months": 2.683602150537581
+    },
+    "Average Temperature (\u00b0C)": {
+      "one_way_anova_F": 1.029187516919613,
+      "p": 0.4168005107085123,
+      "mean_range_across_months": 0.38145833333333456
+    },
+    "Monthly Precipitation (mm)": {
+      "one_way_anova_F": 1.2224799031766547,
+      "p": 0.2651493677584009,
+      "mean_range_across_months": 1.9448916890681005
+    },
+    "Route Distance (km)": {
+      "one_way_anova_F": 2.2314369101990503,
+      "p": 0.010637267409267476,
+      "mean_range_across_months": 1.0449285394265253
+    },
+    "Average Transit Time (hrs)": {
+      "one_way_anova_F": 0.8682158625353962,
+      "p": 0.5712324145253649,
+      "mean_range_across_months": 0.059702732974910244
+    },
+    "Cost per Kilometer ($)": {
+      "one_way_anova_F": 1.4613669703597667,
+      "p": 0.13842564993150203,
+      "mean_range_across_months": 0.1436906362007182
+    }
+  },
+  "route_distance_within_route_std_mean": 12.971661515741792,
+  "route_distance_overall_std": 12.97163493271026,
+  "category_effect_on_quantity_p": 0.0019115844024545762,
+  "traffic_effect_on_transit_p": 0.3132740609467777,
+  "rows_sorted_by_month": false,
+  "conclusion": "Not suitable for training a demand-forecast, shortage or route-disruption model. There is no calendar year/date, no SKU/item identifier and no location identifier, so no time series can be formed. Every numeric column is consistent with an independent uniform draw over a fixed range (Quantity Sold is integer-valued, 450-599), the largest absolute pairwise correlation is about 0.01, no month effect survives a multiple-comparison correction (temperature has no seasonal cycle), and route distance is not stable within a route ID. These properties are typical of randomly generated tabular data and give no evidence of real-world provenance; the file documents no source or licence. It is therefore used only for schema validation/profiling, never for training or for any displayed metric.",
+  "file_sha256": "413fe342d5e3c02f1f2b46beabab2caf34173d04e22b341fc150914a98bf0c0e",
+  "encoding_note": "decoded as mac_roman (0xA1 -> degree sign)"
+}

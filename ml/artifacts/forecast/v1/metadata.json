@@ -1,0 +1,296 @@
+{
+  "kind": "demand_forecast",
+  "model_name": "lightgbm-direct-multihorizon",
+  "version": "v1",
+  "schema_version": 1,
+  "created_utc": "2026-10-10T13:07:37+00:00",
+  "feature_names": [
+    "lag_0",
+    "lag_1",
+    "lag_2",
+    "lag_3",
+    "lag_4",
+    "lag_5",
+    "lag_6",
+    "lag_7",
+    "lag_8",
+    "lag_9",
+    "lag_10",
+    "lag_11",
+    "lag_12",
+    "lag_13",
+    "seas_1",
+    "seas_2",
+    "seas_3",
+    "seas_4",
+    "mean7",
+    "mean14",
+    "cv7",
+    "cv28",
+    "trend_7v7",
+    "trend_14v14",
+    "horizon"
+  ],
+  "max_horizon": 30,
+  "min_history_days": 28,
+  "model_sha256": "0fbba9b37252972e95e50c37b34c0881bdf21aee7fb9dce910e080a80ea9a9e7",
+  "hyperparameters": {
+    "num_leaves": 31,
+    "objective": "regression_l1",
+    "best_iteration": 1078,
+    "val_wape": 0.0948949688672366,
+    "val_mae": 14.995282419824138,
+    "fit_seconds": 51.8
+  },
+  "libraries": {
+    "lightgbm": "4.7.0",
+    "numpy": "2.4.4",
+    "scikit-learn": "1.8.0",
+    "python": "3.12.3"
+  },
+  "training_data": {
+    "dataset": "ISOMORPH Sample (single baseline rollout)",
+    "licence": "CC-BY-4.0",
+    "attribution": "\"ISOMORPH Sample\" dataset by the ISOMORPH authors, licensed under CC-BY-4.0 (paper under submission, NeurIPS 2026 Datasets & Benchmarks).",
+    "nature": "simulator-generated research benchmark (digital-twin supply chain); not observed operational data",
+    "scenario": {
+      "name": "baseline_item50",
+      "n_items": 50,
+      "phi_lo": 0.999,
+      "phi_hi": 0.9996,
+      "shock_count_scale": 1.0,
+      "shock_height_scale": 1.0,
+      "seasonal_scale": 1.0,
+      "containers_scale": 1.0,
+      "ss_scale": 1.0,
+      "leadtime_scale": 1.0,
+      "burst_rate_scale": 1.0,
+      "burst_height_scale": 1.0,
+      "base_lambda_lo": 80.0,
+      "base_lambda_hi": 250.0,
+      "seed": 2025,
+      "days": 52560,
+      "pipeline_mult": 7.0
+    },
+    "licence_file_sha256": "afcd7313c95fcdc744606bd748b68aa82fd4119db4a1c1c39a752efe9ac71771",
+    "files_sha256": {
+      "daily_records.parquet": "6c7460342c3c9df6eeafb80830e93bc865ca528484fdd620fe30a40350fb9c67",
+      "scenario.json": "65ad1e668ee79e5eb833dcc1194cd7f4e2f5b8826fdec17c19292be36dbc6fb7",
+      "demand_signals_cols.txt": "9005c508d80e200debe51fb938c1c0934cb7622838eb9cef128752d62b86467f"
+    },
+    "target": "daily_records.demand (observed Poisson counts), NOT demand_signals.npy (latent intensity)",
+    "split_days": {
+      "train": [
+        0,
+        36792
+      ],
+      "val": [
+        36792,
+        44676
+      ],
+      "test": [
+        44676,
+        52560
+      ]
+    },
+    "seed": 42,
+    "config": {
+      "seed": 42,
+      "split": {
+        "train": 0.7,
+        "val": 0.15,
+        "test": 0.15,
+        "note": "chronological; test is evaluated once, after model selection on validation"
+      },
+      "sampling": {
+        "train_rows": 400000,
+        "val_rows": 120000,
+        "rf_train_rows": 150000,
+        "test_origin_stride": 13
+      },
+      "lightgbm": {
+        "grid": {
+          "num_leaves": [
+            15,
+            31,
+            63
+          ],
+          "objective": [
+            "regression",
+            "regression_l1"
+          ]
+        },
+        "fixed": {
+          "learning_rate": 0.05,
+          "n_estimators": 1500,
+          "min_child_samples": 200,
+          "feature_fraction": 0.8,
+          "bagging_fraction": 0.8,
+          "bagging_freq": 1,
+          "lambda_l2": 1.0,
+          "n_jobs": 1,
+          "verbose": -1
+        },
+        "early_stopping_rounds": 50
+      },
+      "random_forest": {
+        "n_estimators": 100,
+        "max_depth": 14,
+        "min_samples_leaf": 50,
+        "max_features": 0.5,
+        "n_jobs": 1
+      },
+      "interval": {
+        "level": 0.8
+      },
+      "statistical_window_days": 110
+    }
+  },
+  "interval": {
+    "level": 0.8,
+    "method": "empirical per-horizon quantiles of validation residuals in scale-free ratio space",
+    "ratio_lo": [
+      -0.1260178503468609,
+      -0.13125543977819185,
+      -0.13922922446750244,
+      -0.1381037881237248,
+      -0.14207597128615132,
+      -0.13961726312943784,
+      -0.1508585846964911,
+      -0.1518582634523739,
+      -0.14749683233324531,
+      -0.15110108028682825,
+      -0.15558397645981575,
+      -0.1506544126085945,
+      -0.1572788310332221,
+      -0.15912846415151152,
+      -0.16374738880844608,
+      -0.16686457876962196,
+      -0.17582284356830685,
+      -0.17495866497624218,
+      -0.1820862848163418,
+      -0.17145699723485103,
+      -0.16622380939832482,
+      -0.18322145077306595,
+      -0.18870397910676648,
+      -0.1966333627024271,
+      -0.19004306980652688,
+      -0.19982026418377696,
+      -0.1940108112924525,
+      -0.2022002582508575,
+      -0.2134965544754338,
+      -0.21213945685783916
+    ],
+    "ratio_hi": [
+      0.1371070206048656,
+      0.1435505788692938,
+      0.1449042657924433,
+      0.14146049391816673,
+      0.1376710092161385,
+      0.1453162723462529,
+      0.14835444854970065,
+      0.15495443176957052,
+      0.16313036043750212,
+      0.162375029570762,
+      0.15891419348584904,
+      0.158729070234514,
+      0.1731631015702598,
+      0.18015864046637545,
+      0.17334449571575447,
+      0.18296008671598765,
+      0.17499528525658725,
+      0.1718745920834498,
+      0.18354273554936043,
+      0.19172602363584304,
+      0.1981871544099616,
+      0.1991315269160049,
+      0.20591741324599452,
+      0.2036781800256128,
+      0.2095579861686469,
+      0.20660805811832073,
+      0.2221602877690754,
+      0.19935767447516856,
+      0.22969656531992988,
+      0.22724259258060958
+    ],
+    "test_coverage": {
+      "nominal": 0.8,
+      "test_overall": 0.8092011019283747,
+      "h01_07": 0.8116835891381345,
+      "h08_14": 0.8113624557260921,
+      "h15_30": 0.8071694214876033
+    }
+  },
+  "benchmark_test_metrics": {
+    "overall": {
+      "lightgbm": {
+        "n": 907500,
+        "mae": 15.274313635476396,
+        "rmse": 20.80356912213652,
+        "wape": 0.09318794358086177,
+        "bias": -0.0033619775665276633,
+        "mape": 0.11242782137995645,
+        "mape_zero_actuals_excluded": 0
+      },
+      "random_forest": {
+        "n": 907500,
+        "mae": 15.451307589283138,
+        "rmse": 21.025160960137704,
+        "wape": 0.09426777623161917,
+        "bias": 0.0027426399404485284,
+        "mape": 0.11523365191683,
+        "mape_zero_actuals_excluded": 0
+      },
+      "statistical_ewma (existing)": {
+        "n": 907500,
+        "mae": 19.393419647060576,
+        "rmse": 25.988132786675486,
+        "wape": 0.11831843571109772,
+        "bias": -0.011024918168380592,
+        "mape": 0.13935701341144557,
+        "mape_zero_actuals_excluded": 0
+      },
+      "naive_last": {
+        "n": 907500,
+        "mae": 19.448675482093662,
+        "rmse": 25.67618607054943,
+        "wape": 0.11865554923125074,
+        "bias": -0.0006489872897383872,
+        "mape": 0.14517759617030573,
+        "mape_zero_actuals_excluded": 0
+      },
+      "seasonal_naive_7": {
+        "n": 907500,
+        "mae": 18.229799449035813,
+        "rmse": 24.459471284907,
+        "wape": 0.11121923793691892,
+        "bias": -0.0007267837461205555,
+        "mape": 0.1328667881191226,
+        "mape_zero_actuals_excluded": 0
+      },
+      "trailing_mean_28": {
+        "n": 907500,
+        "mae": 19.28366603699331,
+        "rmse": 26.12373302712932,
+        "wape": 0.11764883356288798,
+        "bias": -0.0011958837776222424,
+        "mape": 0.14575844405661845,
+        "mape_zero_actuals_excluded": 0
+      }
+    },
+    "best_baseline": "seasonal_naive_7"
+  },
+  "applicability": "Scale-free model trained on a simulator-generated benchmark. Valid inputs: >=28 days of non-negative daily demand with a mean >= 1 unit/day and few zero days. Its accuracy on any other system is NOT established by this benchmark.",
+  "promotion": {
+    "status": "not_promoted",
+    "adapter": "weather",
+    "best_variant": "ml_weather_adapter",
+    "reason": "scenario holdout h1-14: ml_weather_adapter WAPE 4.34% vs statistical 4.00% (relative improvement -8.5%, 95% CI -11.0..-6.2%); need >= +2% with CI above 0; series-level interval coverage 99.9% outside 70-90%",
+    "criteria": {
+      "scenario_holdout_improvement_ge_2pct_ci_gt0": false,
+      "benchmark_beats_best_baseline_ci_gt0": true,
+      "interval_coverage_70_90": false
+    },
+    "decided_utc": "2026-10-10T18:49:01+00:00"
+  }
+}

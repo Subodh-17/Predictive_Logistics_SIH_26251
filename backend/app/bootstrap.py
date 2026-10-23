@@ -71,9 +71,10 @@ def initialise() -> dict:
         return {"migrations_applied": applied, "scenario_seeded": seeded, "forecast_rows_created": n, "admin": admin_state}
 
 
-def retry_until_ready(interval: float = RETRY_INTERVAL_SECONDS, max_attempts: int | None = None, sleep=time.sleep) -> int:
+def retry_until_ready(interval: float = RETRY_INTERVAL_SECONDS, max_attempts: int | None = None, sleep=time.sleep, backoff: bool = False, max_interval: float = 30.0) -> int:
     """Keep calling initialise() until it succeeds (returns the number of retries used). Raises RuntimeError after max_attempts."""
     tries = 0
+    current_interval = interval
     while True:
         tries += 1
         try:
@@ -85,10 +86,12 @@ def retry_until_ready(interval: float = RETRY_INTERVAL_SECONDS, max_attempts: in
             log.warning("bootstrap retry %d failed: %s", tries, e)
             if max_attempts is not None and tries >= max_attempts:
                 raise RuntimeError(f"bootstrap did not succeed after {tries} retries") from e
-            sleep(interval)
+            sleep(current_interval)
+            if backoff:
+                current_interval = min(max_interval, current_interval * 2)
 
 
-def start_background_retry(interval: float = RETRY_INTERVAL_SECONDS) -> None:
+def start_background_retry(interval: float = RETRY_INTERVAL_SECONDS, backoff: bool = True) -> None:
     """Self-heal after a failed start-up (e.g. the DB was unreachable): retry in a daemon thread so the API needs no restart."""
     if _state["retrying"] or _state["ready"]:
         return
@@ -96,7 +99,7 @@ def start_background_retry(interval: float = RETRY_INTERVAL_SECONDS) -> None:
 
     def run() -> None:
         try:
-            retry_until_ready(interval)
+            retry_until_ready(interval, backoff=backoff)
         finally:
             _state["retrying"] = False
 

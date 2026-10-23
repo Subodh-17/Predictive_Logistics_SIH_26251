@@ -53,7 +53,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Predictive Logistics & Forward Supply Chain \u2014 SIH PS 26251", description=config.DATA_NOTICE + " All telemetry is simulated.",
-              version="2.0.0", lifespan=lifespan,
+              version="8.0.0", lifespan=lifespan,
               docs_url="/docs" if config.settings.enable_api_docs else None, redoc_url=None,
               openapi_url="/openapi.json" if config.settings.enable_api_docs else None)
 app.add_middleware(CORSMiddleware, allow_origins=config.CORS_ORIGINS, allow_credentials=True, allow_methods=["GET", "POST", "PATCH", "OPTIONS"],

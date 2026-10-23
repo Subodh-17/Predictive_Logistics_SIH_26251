@@ -166,7 +166,7 @@ function Shell() {
           <div>
             <b>Decision Support Only</b> — Illustrative scenario: fictional locations and simulated telemetry, not operational records. Final logistics decisions remain with authorised personnel.
           </div>
-          <div className="font-mono text-[10px] text-mu">V7.2 COMMAND CENTRE</div>
+          <div className="font-mono text-[10px] text-mu">V8.0 COMMAND CENTRE</div>
         </div>
       </main>
     </div>

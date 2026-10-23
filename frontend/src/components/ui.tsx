@@ -49,11 +49,31 @@ const TG: Record<string, string> = {
   '': 'text-tx border-ln bg-pn2'
 }
 export const Tag = ({ tone = '', children }: { tone?: 'ok' | 'wr' | 'cr' | ''; children: ReactNode }) => (
-  <span className={`inline-flex items-center gap-1 font-mono text-[10px] tracking-[.08em] px-2 py-0.5 border rounded-sm whitespace-nowrap uppercase font-semibold ${TG[tone]}`}>{children}</span>
+  <span className={`inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[.08em] px-2 py-0.5 border rounded-sm whitespace-nowrap uppercase font-semibold ${TG[tone]}`}>
+    {tone && <span className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${tone === 'cr' ? 'bg-cr' : tone === 'wr' ? 'bg-wr' : 'bg-ok'}`} aria-hidden="true" />}
+    <span>{children}</span>
+  </span>
 )
 export const StatusTag = ({ s }: { s: Status | string | null }) =>
   s === 'CRITICAL' ? <Tag tone="cr">CRITICAL</Tag> : s === 'WARNING' ? <Tag tone="wr">WARNING</Tag> : <Tag tone="ok">NORMAL</Tag>
 export const LevelTag = ({ level }: { level: string }) => <Tag tone={level === 'LOW' ? 'ok' : level === 'MODERATE' ? 'wr' : 'cr'}>{level}</Tag>
+
+export const RiskGauge = ({ value, max = 100, label = 'OVERALL RISK', level = 'ok' }: { value: number; max?: number; label?: string; level?: 'ok' | 'wr' | 'cr' | string }) => {
+  const pct = Math.min(100, Math.max(0, (value / max) * 100))
+  const color = level === 'cr' ? 'bg-cr' : level === 'wr' ? 'bg-wr' : 'bg-ok'
+  const textColor = level === 'cr' ? 'text-cr' : level === 'wr' ? 'text-wr' : 'text-ok'
+  return (
+    <div className="flex flex-col gap-1 min-w-[120px]" role="meter" aria-valuenow={value} aria-valuemin={0} aria-valuemax={max} aria-label={label}>
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="font-mono text-[10px] text-mu uppercase tracking-wider">{label}</span>
+        <b className={`font-mono text-[12px] font-bold ${textColor}`}>{value} / {max}</b>
+      </div>
+      <div className="h-1.5 w-full bg-bar rounded-xs overflow-hidden border border-ln/60">
+        <div className={`h-full ${color} transition-all duration-300 rounded-xs`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  )
+}
 
 export const Grid2 = ({ children, className = '' }: { children: ReactNode; className?: string }) => <div className={`grid gap-3 mb-3 grid-cols-1 lg:grid-cols-[2fr_1fr] ${className}`}>{children}</div>
 export const GridHalf = ({ children }: { children: ReactNode }) => <div className="grid gap-3 mb-3 grid-cols-1 lg:grid-cols-2">{children}</div>

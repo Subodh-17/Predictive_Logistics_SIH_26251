@@ -33,7 +33,7 @@ export default function Login() {
                 <span className="font-mono text-[10px] text-mu tracking-wider block">FORWARD SUPPLY CHAIN · DECISION SUPPORT</span>
               </div>
             </div>
-            <span className="font-mono text-[9px] uppercase px-2 py-0.5 border border-ln rounded-xs bg-pn2 text-mu">V7.2</span>
+            <span className="font-mono text-[9px] uppercase px-2 py-0.5 border border-ln rounded-xs bg-pn2 text-mu">V8.0</span>
           </div>
 
           <div className="mb-4">

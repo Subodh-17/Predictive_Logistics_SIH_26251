@@ -76,9 +76,9 @@ with sync_playwright() as p:
     check('Leaflet', 'map container rendered with tile pane', pg.locator('.leaflet-container').count() >= 1 and pg.locator('.leaflet-tile-pane').count() >= 1)
     check('Leaflet', 'markers + route lines drawn (5 forward + 8 routes + 8 terrain bands)', n_paths >= 21, f'interactive paths={n_paths}')
     if len(osm_failed) >= 3:
-        check('Leaflet', 'OSM tile failure handled gracefully (notice shown, app intact)', pg.locator('text=OpenStreetMap tiles unavailable').count() >= 1 and 'COMMAND DASHBOARD' in t, f'failed OSM tile requests={len(osm_failed)}')
+        check('Leaflet', 'OSM tile failure handled gracefully (notice shown, app intact)', pg.locator('text=Map tiles unavailable').count() >= 1 and 'COMMAND DASHBOARD' in t, f'failed OSM tile requests={len(osm_failed)}')
     else:
-        check('Leaflet', 'OSM tiles loaded successfully (no tile failure notice, app intact)', pg.locator('text=OpenStreetMap tiles unavailable').count() == 0 and 'COMMAND DASHBOARD' in t and pg.locator('.leaflet-tile-pane img').count() >= 1, f'tiles loaded cleanly, failed={len(osm_failed)}')
+        check('Leaflet', 'OSM tiles loaded successfully (no tile failure notice, app intact)', pg.locator('text=Map tiles unavailable').count() == 0 and 'COMMAND DASHBOARD' in t and pg.locator('.leaflet-tile-pane img').count() >= 1, f'tiles loaded cleanly, failed={len(osm_failed)}')
     pg.locator('input[type=checkbox]').first.uncheck(); pg.wait_for_timeout(400)
     n_off = pg.locator('path.leaflet-interactive').count(); pg.locator('input[type=checkbox]').first.check(); pg.wait_for_timeout(400)
     check('Leaflet', 'terrain layer toggle works (8 band polylines)', n_paths - n_off == 8 and pg.locator('path.leaflet-interactive').count() == n_paths, f'{n_paths} -> {n_off} -> {pg.locator("path.leaflet-interactive").count()}')

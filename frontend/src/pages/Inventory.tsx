@@ -48,7 +48,7 @@ export default function Inventory() {
           <LineChartBox xFormat={s => s} height={220} data={p.days.map((d, i) => ({ date: 'D+' + d, stock: p.projected_stock[i], safety: p.safety_stock })) as never}
             lines={[{ key: 'stock', name: 'Projected stock', color: pal.accent }, { key: 'safety', name: 'Safety stock', color: pal.danger, dashed: true }]} />)}</Async>
       </Card>}
-      <RiskBasis />
+      <RiskBasis refreshKey={refreshKey} />
       <Card title="INVENTORY POSITION" className="mb-3">
         <Async state={inv} what="inventory">{() => (
           <Table head={['LOCATION', 'SUPPLY', 'STOCK', 'SAFETY', 'DAILY USE', 'DAYS LEFT', 'PRED. SHORTAGE 14 D', 'RISK']}>
@@ -79,8 +79,8 @@ interface Basis { method: string; source: string; horizon_days: number; status_r
   shortage_onset_model: { integrated_with_inventory_status: boolean; reason: string; required_inputs: Record<string, string>; available_in_application: Record<string, boolean> } }
 
 /** Source, horizon, rules and limitations of every risk figure on this page (from /api/inventory/risk-basis). */
-function RiskBasis() {
-  const b = useApi<Basis>('/api/inventory/risk-basis')
+function RiskBasis({ refreshKey }: { refreshKey?: number }) {
+  const b = useApi<Basis>('/api/inventory/risk-basis', refreshKey)
   return (
     <details className="bento-card p-3.5 mb-3" data-testid="risk-basis">
       <summary className="cursor-pointer font-mono text-[11px] tracking-[.12em] font-semibold text-mu hover:text-tx transition-colors select-none">

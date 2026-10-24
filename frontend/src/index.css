@@ -80,14 +80,6 @@ input[type=range] {
 }
 :focus-visible { outline: 2px solid rgb(var(--act)); outline-offset: 2px; }
 
-/* --- Accessibility: reduced motion --- */
-@media (prefers-reduced-motion: reduce) {
-  .animate-spin { animation: none; }
-  .skeleton { animation: none; background: rgb(var(--sk-from)); }
-  tr.row { transition: none; }
-  select, input[type=text], input[type=number], input[type=password], textarea { transition: none; }
-}
-
 /* --- Skeleton shimmer animation for loading states --- */
 @keyframes shimmer {
   0% { background-position: -400px 0; }
@@ -98,6 +90,14 @@ input[type=range] {
   background-size: 800px 100%;
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: 2px;
+}
+
+/* --- Accessibility: reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin { animation: none; }
+  .skeleton { animation: none; background: rgb(var(--sk-from)); }
+  tr.row { transition: none; }
+  select, input[type=text], input[type=number], input[type=password], textarea { transition: none; }
 }
 
 /* --- Leaflet map theme --- */

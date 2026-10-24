@@ -89,7 +89,9 @@ _DUMMY_HASH: dict[int, str] = {}
 
 def burn_password_check(password: str, log_n: int) -> None:
     """Spend the same time as a real verification (used for unknown user names so timing does not reveal them)."""
-    h = _DUMMY_HASH.setdefault(log_n, hash_password(secrets.token_urlsafe(12), log_n))
+    h = _DUMMY_HASH.get(log_n)
+    if h is None:
+        h = _DUMMY_HASH.setdefault(log_n, hash_password(secrets.token_urlsafe(12), log_n))
     verify_password(password, h)
 
 

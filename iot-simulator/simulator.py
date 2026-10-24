@@ -14,6 +14,7 @@ import random
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 LOCS = ["Base_01", "Base_02", "Base_03", "Base_04", "Base_05"]
@@ -23,8 +24,22 @@ SUPS = ["Food", "Fuel", "Water", "Medical", "Maintenance", "Engineering", "Cloth
 _token = os.environ.get("PLSD_TOKEN", "")
 
 
+def validate_api_url(api: str) -> str:
+    """Validate API URL: allow loopback HTTP and remote HTTPS; reject remote plain HTTP and other schemes."""
+    p = urllib.parse.urlsplit(api)
+    if p.scheme not in ("http", "https"):
+        raise ValueError(f"Invalid API URL scheme: {p.scheme!r}. Must be http or https.")
+    host = p.hostname or ""
+    if p.scheme == "http":
+        is_loopback = host in ("localhost", "127.0.0.1", "::1", "0.0.0.0") or host.endswith(".localhost")
+        if not is_loopback:
+            raise ValueError(f"Insecure API URL '{api}': plain HTTP is only allowed for loopback hosts (localhost, 127.0.0.1). Use HTTPS for remote hosts.")
+    return api
+
+
 def _login(api: str) -> str:
     """Sign in with PLSD_USER / PLSD_PASSWORD (an account with the operator role) and return a bearer token. Credentials are never accepted on the command line."""
+    validate_api_url(api)
     user, pw = os.environ.get("PLSD_USER", ""), os.environ.get("PLSD_PASSWORD", "")
     if not user or not pw:
         raise SystemExit("Authentication required: set PLSD_USER and PLSD_PASSWORD (operator or admin account) or PLSD_TOKEN.")
@@ -35,6 +50,7 @@ def _login(api: str) -> str:
 
 def post(api: str, body: dict) -> dict:
     global _token
+    validate_api_url(api)
     if not _token:
         _token = _login(api)
     req = urllib.request.Request(api.rstrip("/") + "/api/iot/update", data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "Authorization": "Bearer " + _token}, method="POST")
@@ -52,6 +68,11 @@ def main() -> int:
     ap.add_argument("--location"); ap.add_argument("--supply")
     ap.add_argument("--event", choices=["RECEIVE", "ISSUE", "COUNT"]); ap.add_argument("--quantity", type=float)
     a = ap.parse_args()
+    try:
+        validate_api_url(a.api)
+    except ValueError as e:
+        print(f"Configuration error: {e}", file=sys.stderr)
+        return 2
     rng = random.Random(a.seed)
     for k in range(a.count):
         body = {"device_id": a.device, "tag_id": f"RFID-SIM-{rng.randint(1000, 9999)}",

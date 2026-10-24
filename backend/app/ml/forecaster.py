@@ -44,7 +44,10 @@ class MLForecaster:
             raise ArtifactError(f"model file could not be parsed: {e}") from e
         if booster.num_feature() != len(F.FEATURE_NAMES):
             raise ArtifactError("model feature count does not match this code version")
-        return cls(booster, meta)
+        try:
+            return cls(booster, meta)
+        except (KeyError, TypeError, ValueError) as e:
+            raise ArtifactError(f"model metadata is incomplete or malformed: {type(e).__name__}: {e}") from e
 
     # ------------------------------------------------------------------ prediction
     def _predict_ratio(self, X: np.ndarray) -> np.ndarray:

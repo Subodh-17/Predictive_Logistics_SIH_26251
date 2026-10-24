@@ -181,3 +181,30 @@ def test_shortage_features_ignore_the_future():
     for a in (d2, o2, b2, t2, n2):
         a[121:, 1] = 9e5
     assert np.array_equal(X1, S.build(d2, o2, b2, t2, n2, [1], [120]))
+
+def test_malformed_metadata_raises_artifact_error(monkeypatch, art):
+    p = _meta_path(art)
+    meta = json.loads(p.read_text())
+
+    # 1. Missing required key
+    meta_missing = dict(meta)
+    del meta_missing["interval"]
+    p.write_text(json.dumps(meta_missing))
+    with pytest.raises(ArtifactError, match="model metadata is incomplete or malformed"):
+        MLForecaster.load(art)
+
+    # 2. Invalid types inside metadata
+    meta_bad_type = dict(meta)
+    meta_bad_type["interval"] = {"ratio_lo": "invalid_not_array", "ratio_hi": [1.0], "level": 0.8}
+    p.write_text(json.dumps(meta_bad_type))
+    with pytest.raises(ArtifactError, match="model metadata is incomplete or malformed"):
+        MLForecaster.load(art)
+
+    # 3. Verify model_service cleanly falls back to statistical when metadata is malformed
+    monkeypatch.setattr(config, "FORECAST_MODEL_MODE", "ml")
+    monkeypatch.setattr(config, "ML_ARTIFACT_DIR", art)
+    ms.reset_cache()
+    r = ms.resolve_forecast()
+    assert r.family == "statistical" and r.is_fallback is True
+    assert "malformed" in (r.reason or "")
+

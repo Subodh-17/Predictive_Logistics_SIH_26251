@@ -96,3 +96,29 @@ def test_client_ip_trusts_only_the_configured_proxy_hops():
 def test_redact_masks_credentials_recursively():
     out = sec.redact({"user": "a", "password": "p", "nested": {"Authorization": "Bearer x", "ok": 1}, "list": [{"api_key": "k"}]})
     assert out == {"user": "a", "password": "***", "nested": {"Authorization": "***", "ok": 1}, "list": [{"api_key": "***"}]}
+
+def test_burn_password_check_caching_and_behavior(monkeypatch):
+    test_log_n = 10
+    sec._DUMMY_HASH.pop(test_log_n, None)
+
+    hash_calls = []
+    orig_hash = sec.hash_password
+
+    def tracked_hash(pw: str, log_n: int) -> str:
+        hash_calls.append((pw, log_n))
+        return orig_hash(pw, log_n)
+
+    monkeypatch.setattr(sec, "hash_password", tracked_hash)
+
+    # First call must generate and cache the dummy hash
+    sec.burn_password_check("dummy-attempt-1", test_log_n)
+    assert len(hash_calls) == 1
+    assert test_log_n in sec._DUMMY_HASH
+    first_cached = sec._DUMMY_HASH[test_log_n]
+
+    # Subsequent calls must reuse the cached dummy hash without re-computing hash_password
+    sec.burn_password_check("dummy-attempt-2", test_log_n)
+    sec.burn_password_check("dummy-attempt-3", test_log_n)
+    assert len(hash_calls) == 1, "hash_password should only be called once when log_n is cached"
+    assert sec._DUMMY_HASH[test_log_n] == first_cached
+

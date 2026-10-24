@@ -92,7 +92,8 @@ def run_smoke_tests(base_url: str, user: str | None = None, password: str | None
             code, data, elapsed = check_endpoint(base_url, "/api/health/detail", headers=auth_headers)
             detail_ok = (code == 200 and "models" in data)
             status_str = "PASS" if detail_ok else "FAIL"
-            print(f"[{status_str}] GET /api/health/detail -> HTTP {code} ({elapsed:.1f}ms): env={data.get('environment')}, active_model={data.get('models', {}).get('active_model')}")
+            active_m = data.get('models', {}).get('active_forecast_model', {}).get('model_id') or data.get('models', {}).get('active_model')
+            print(f"[{status_str}] GET /api/health/detail -> HTTP {code} ({elapsed:.1f}ms): env={data.get('environment')}, active_model={active_m}")
             if not detail_ok:
                 all_passed = False
 

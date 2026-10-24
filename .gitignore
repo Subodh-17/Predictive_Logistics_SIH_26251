@@ -11,3 +11,10 @@ venv/
 *.log
 *.zip
 *.tsbuildinfo
+secrets/
+*.key
+*.pem
+*.pfx
+*.pkcs12
+*.dump
+*credentials*.json

@@ -11,6 +11,7 @@ databases:
     plan: basic-256mb
     databaseName: logistics
     user: logistics
+    ipAllowList: []   # internal connections only
 services:
   - type: pserv
     name: api

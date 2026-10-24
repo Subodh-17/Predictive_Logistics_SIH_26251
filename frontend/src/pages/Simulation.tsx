@@ -3,7 +3,7 @@ import { ApiError, post, useApi } from '../api'
 import { useApp } from '../state'
 import { useAuth } from '../auth'
 import { BASELINE, type Scenario, type SimResult } from '../types'
-import { Btn, Card, ErrorBox, Grid2, Note, PageTitle, StatusTag, Table } from '../components/ui'
+import { Btn, Card, ErrorBox, Grid2, Loading, Note, PageTitle, StatusTag, Table } from '../components/ui'
 import { fx, roadLabel, weatherLabel } from '../format'
 import RecommendedResponse from '../components/RecommendedResponse'
 
@@ -28,8 +28,9 @@ function CompareRuns({ tick }: { tick: number }) {
               <select className="w-full max-w-full min-w-0 truncate" value={ids[k]} onChange={e => setIds({ ...ids, [k]: e.target.value })} data-testid={`cmp-${k}`}><option value="">choose…</option>{list.map(r => <option key={r.id} value={r.id}>{runLabel(r)}</option>)}</select></label>))}
         </div>
         {ids.a !== '' && ids.a === ids.b && <p role="alert" className="text-wr text-[12px]">Choose two different runs.</p>}
-        {ready && cmp.error && <ErrorBox error={cmp.error} />}
-        {ready && cmp.data && (<div data-testid="cmp-result">
+        {ready && cmp.loading && <Loading what="scenario comparison" />}
+        {ready && !cmp.loading && cmp.error && <ErrorBox error={cmp.error} />}
+        {ready && !cmp.loading && !cmp.error && cmp.data && (<div data-testid="cmp-result">
           <p role="status" className={`text-[12px] mb-2 ${cmp.data.same_baseline ? 'text-mu' : 'text-wr'}`}>{cmp.data.note}</p>
           <Table head={['METRIC', 'A', 'B', 'B − A', 'BETTER']}>
             {cmp.data.metrics.map(m => <tr key={m.metric}><td>{m.label}</td><td>{m.a}</td><td>{m.b}</td><td>{m.delta > 0 ? '+' : ''}{m.delta}{m.delta_pct !== null ? ` (${m.delta_pct > 0 ? '+' : ''}${m.delta_pct}%)` : ''}</td>

@@ -48,12 +48,24 @@ def _login(api: str) -> str:
         return json.loads(r.read())["access_token"]
 
 
+def build_post_request(api: str, body: dict, token: str) -> urllib.request.Request:
+    validate_api_url(api)
+    req = urllib.request.Request(
+        api.rstrip("/") + "/api/iot/update",
+        data=json.dumps(body).encode(),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    req.add_unredirected_header("Authorization", "Bearer " + token)
+    return req
+
+
 def post(api: str, body: dict) -> dict:
     global _token
     validate_api_url(api)
     if not _token:
         _token = _login(api)
-    req = urllib.request.Request(api.rstrip("/") + "/api/iot/update", data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "Authorization": "Bearer " + _token}, method="POST")
+    req = build_post_request(api, body, _token)
     with urllib.request.urlopen(req, timeout=20) as r:
         return json.loads(r.read())
 

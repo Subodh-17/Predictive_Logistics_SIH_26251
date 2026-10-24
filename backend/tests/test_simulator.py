@@ -55,3 +55,33 @@ def test_post_and_login_validate_url_before_dispatch():
 
     with pytest.raises(ValueError, match="plain HTTP is only allowed for loopback"):
         sim._login("http://insecure-remote.example.com")
+
+def test_build_post_request_unredirected_authorization():
+    req = sim.build_post_request("http://localhost:8000", {"k": "v"}, "test-token-123")
+    # Verify Authorization is added as an unredirected header, not a general header
+    assert req.has_header("Authorization")
+    assert req.unredirected_hdrs.get("Authorization") == "Bearer test-token-123"
+    assert "Authorization" not in req.headers
+
+
+def test_authorization_header_stripped_on_redirect():
+    import email.message
+    import io
+    import urllib.request
+
+    req = sim.build_post_request("http://localhost:8000", {"k": "v"}, "secret-token")
+    assert req.has_header("Authorization")
+
+    # Simulate HTTPRedirectHandler following a redirect (e.g. 302 Found)
+    handler = urllib.request.HTTPRedirectHandler()
+    msg = email.message.Message()
+    msg["Location"] = "http://localhost:8000/new-location"
+
+    redirected_req = handler.redirect_request(
+        req, io.BytesIO(b""), 302, "Found", msg, newurl="http://localhost:8000/new-location"
+    )
+
+    # The redirected request must NOT carry the bearer token in headers or unredirected_hdrs
+    assert not redirected_req.has_header("Authorization")
+    assert "Authorization" not in redirected_req.headers
+    assert "Authorization" not in redirected_req.unredirected_hdrs

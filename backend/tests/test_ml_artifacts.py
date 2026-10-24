@@ -208,3 +208,42 @@ def test_malformed_metadata_raises_artifact_error(monkeypatch, art):
     assert r.family == "statistical" and r.is_fallback is True
     assert "malformed" in (r.reason or "")
 
+def test_interval_array_length_and_value_validation(monkeypatch, art):
+    p = _meta_path(art)
+    meta = json.loads(p.read_text())
+
+    # Empty array
+    meta_empty = json.loads(json.dumps(meta))
+    meta_empty["interval"]["ratio_lo"] = []
+    p.write_text(json.dumps(meta_empty))
+    with pytest.raises(ArtifactError, match="must have exactly 30 elements"):
+        MLForecaster.load(art)
+
+    # Incorrect length (10 elements instead of 30)
+    meta_short = json.loads(json.dumps(meta))
+    meta_short["interval"]["ratio_lo"] = [0.9] * 10
+    p.write_text(json.dumps(meta_short))
+    with pytest.raises(ArtifactError, match="must have exactly 30 elements"):
+        MLForecaster.load(art)
+
+    # Incorrect length (35 elements instead of 30)
+    meta_long = json.loads(json.dumps(meta))
+    meta_long["interval"]["ratio_hi"] = [1.2] * 35
+    p.write_text(json.dumps(meta_long))
+    with pytest.raises(ArtifactError, match="must have exactly 30 elements"):
+        MLForecaster.load(art)
+
+    # Non-finite values (NaN)
+    meta_nan = json.loads(json.dumps(meta))
+    meta_nan["interval"]["ratio_lo"][5] = float("nan")
+    p.write_text(json.dumps(meta_nan))
+    with pytest.raises(ArtifactError, match="finite numeric values"):
+        MLForecaster.load(art)
+
+    # Non-numeric string value
+    meta_str = json.loads(json.dumps(meta))
+    meta_str["interval"]["ratio_lo"][0] = "invalid_string"
+    p.write_text(json.dumps(meta_str))
+    with pytest.raises(ArtifactError, match="incomplete or malformed"):
+        MLForecaster.load(art)
+

@@ -27,7 +27,14 @@ class MLForecaster:
         self.booster, self.meta = booster, meta
         self.model_id = f"{meta['model_name']}@{meta['version']}"
         q = meta["interval"]
-        self._q_lo, self._q_hi = np.asarray(q["ratio_lo"], float), np.asarray(q["ratio_hi"], float)
+        q_lo, q_hi = np.asarray(q["ratio_lo"], float), np.asarray(q["ratio_hi"], float)
+        if q_lo.shape != (F.MAX_HORIZON,) or q_hi.shape != (F.MAX_HORIZON,):
+            raise ValueError(
+                f"interval ratio_lo and ratio_hi must have exactly {F.MAX_HORIZON} elements, got {q_lo.shape} and {q_hi.shape}"
+            )
+        if not np.all(np.isfinite(q_lo)) or not np.all(np.isfinite(q_hi)):
+            raise ValueError("interval ratio_lo and ratio_hi must contain finite numeric values")
+        self._q_lo, self._q_hi = q_lo, q_hi
         self.interval_level = q["level"]
 
     @classmethod

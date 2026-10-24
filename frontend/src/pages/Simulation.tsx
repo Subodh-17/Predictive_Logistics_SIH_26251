@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { ApiError, post, useApi } from '../api'
 import { useApp } from '../state'
 import { useAuth } from '../auth'
@@ -41,27 +41,52 @@ function CompareRuns({ tick }: { tick: number }) {
   )
 }
 
+const sameScenario = (a: Scenario, b: Scenario): boolean =>
+  a.demand === b.demand && a.weather === b.weather && a.road === b.road && a.vehicles === b.vehicles
+
 export default function Simulation() {
   const { scenario, applyScenario, resetScenario } = useApp()
   const { can } = useAuth()
   const canRun = can('operator')
   const [p, setP] = useState<Scenario>(scenario)
   const [res, setRes] = useState<SimResult | null>(null)
+  const [resScenario, setResScenario] = useState<Scenario | null>(null)
+  const runSeq = useRef(0)
   const [runCount, setRunCount] = useState(0)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<ApiError | null>(null)
 
-  async function run(): Promise<SimResult | null> {
+  async function run(target: Scenario = p): Promise<SimResult | null> {
+    const seq = ++runSeq.current
     setBusy(true); setErr(null)
     try {
-      const r = await post<SimResult>('/api/simulation/run', { demand_increase: p.demand, weather_severity: p.weather, road_degradation: p.road, vehicle_availability: p.vehicles })
-      setRes(r); setRunCount(c => c + 1); return r
-    } catch (e) { setErr(e instanceof ApiError ? e : new ApiError(0, 'UNKNOWN', String(e))); return null } finally { setBusy(false) }
+      const r = await post<SimResult>('/api/simulation/run', {
+        demand_increase: target.demand,
+        weather_severity: target.weather,
+        road_degradation: target.road,
+        vehicle_availability: target.vehicles,
+      })
+      if (seq === runSeq.current) {
+        setRes(r)
+        setResScenario(target)
+        setRunCount(c => c + 1)
+      }
+      return r
+    } catch (e) {
+      if (seq === runSeq.current) {
+        setErr(e instanceof ApiError ? e : new ApiError(0, 'UNKNOWN', String(e)))
+      }
+      return null
+    } finally {
+      if (seq === runSeq.current) {
+        setBusy(false)
+      }
+    }
   }
   const slider = (label: string, id: string, min: number, max: number, val: number, set: (n: number) => void, text: string) => (
     <div className="grid gap-2.5 items-center mb-3.5 sm:grid-cols-[160px_1fr_90px]">
       <label htmlFor={id} className="text-[12.5px] font-medium text-tx">{label}</label>
-      <input id={id} type="range" min={min} max={max} step={1} value={val} onChange={e => set(Number(e.target.value))} />
+      <input id={id} type="range" min={min} max={max} step={1} value={val} disabled={busy} onChange={e => set(Number(e.target.value))} />
       <div className="bg-ins/90 border border-ln/70 px-2 py-0.5 rounded-sm text-center">
         <b className="font-mono text-[12px] text-act" data-testid={id + '-label'}>{text}</b>
       </div>
@@ -93,9 +118,14 @@ export default function Simulation() {
           {slider('Road condition', 'sr', 0, 100, Math.round(p.road * 100), n => setP({ ...p, road: n / 100 }), roadLabel(p.road))}
           {slider('Vehicle availability', 'sv', 0, 50, Math.round((1 - p.vehicles) * 100), n => setP({ ...p, vehicles: 1 - n / 100 }), Math.round(p.vehicles * 100) + '%')}
           <div className="flex flex-wrap gap-2">
-            <Btn primary disabled={busy || !canRun} onClick={() => { void run() }}>{busy ? 'RUNNING…' : 'RUN SIMULATION'}</Btn>
-            <Btn disabled={busy} onClick={async () => { if (!canRun) { applyScenario(p); return } const r = res ?? await run(); if (r) applyScenario(p) }}>APPLY TO ALL SCREENS</Btn>
-            <Btn disabled={busy} onClick={() => { setP(BASELINE); setRes(null); resetScenario() }}>RESET</Btn>
+            <Btn primary disabled={busy || !canRun} onClick={() => { void run(p) }}>{busy ? 'RUNNING…' : 'RUN SIMULATION'}</Btn>
+            <Btn disabled={busy} onClick={async () => {
+              if (!canRun) { applyScenario(p); return }
+              const hasMatch = res !== null && resScenario !== null && sameScenario(resScenario, p)
+              const r = hasMatch ? res : await run(p)
+              if (r) applyScenario(p)
+            }}>APPLY TO ALL SCREENS</Btn>
+            <Btn disabled={busy} onClick={() => { setP(BASELINE); setRes(null); setResScenario(null); resetScenario() }}>RESET</Btn>
           </div>
           {err && <div className="mt-3"><ErrorBox error={err} /></div>}
           {!canRun && <p role="note" data-testid="sim-readonly" className="mt-3 text-wr text-[12px]">Running and saving a before/after simulation requires the operator role. You can still apply these settings to every screen to see the recalculated figures.</p>}

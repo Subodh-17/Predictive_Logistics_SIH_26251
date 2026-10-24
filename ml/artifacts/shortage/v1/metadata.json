@@ -1,0 +1,243 @@
+{
+  "kind": "shortage_risk",
+  "model_name": "lightgbm-shortage-onset-7d",
+  "version": "v1",
+  "shortage_schema": 1,
+  "schema_version": 1,
+  "created_utc": "2026-10-10T18:49:47+00:00",
+  "feature_names": [
+    "cover_days_28",
+    "cover_days_7",
+    "backlog_ratio",
+    "in_transit_ratio",
+    "cover_plus_pipeline_days",
+    "demand_ratio_7v28",
+    "demand_cv_28",
+    "on_hand_change_7d",
+    "in_transit_change_7d",
+    "shortage_days_last_28",
+    "days_since_shortage"
+  ],
+  "horizon_days": 7,
+  "target": "any new_backlog_today > 0 on days t+1..t+7 at the destination node; population = item-days with backlog == 0 at t",
+  "model_sha256": "578694c8c2d8b3f351cce08d53a0340151092db62b62517778941ef97e58db99",
+  "hyperparameters": {
+    "num_leaves": 7,
+    "best_iteration": 11,
+    "val_pr_auc": 0.2313217101376878,
+    "fit_seconds": 3.9
+  },
+  "calibration": {
+    "method": "isotonic regression fitted on the second half of validation",
+    "x": [
+      0.0059307152948059405,
+      0.008754607278998242,
+      0.008821058898345592,
+      0.010231002135925685,
+      0.010426676373381781,
+      0.011231629754375088,
+      0.011375638666192026,
+      0.012852840281778672,
+      0.012880710590678565,
+      0.026255221190273174,
+      0.026408035621756556,
+      0.042890633254672475,
+      0.043828359073374006,
+      0.047165910580655626,
+      0.0481130931211818,
+      0.18121914871790307,
+      0.18329561242037418,
+      0.19642168034225876,
+      0.20978358208686787,
+      0.4859773182360863,
+      0.5735098752528082,
+      0.6087664903279675,
+      0.6158871923911309,
+      0.6213031251583617,
+      0.6321447063449114
+    ],
+    "y": [
+      0.00017758122909124237,
+      0.00017758122909124237,
+      0.003169572107765452,
+      0.003169572107765452,
+      0.005673758865248227,
+      0.005673758865248227,
+      0.015790906615845358,
+      0.015790906615845358,
+      0.016377413835248107,
+      0.016377413835248107,
+      0.09806835066864784,
+      0.09806835066864784,
+      0.21875,
+      0.21875,
+      0.279126213592233,
+      0.279126213592233,
+      0.625,
+      0.625,
+      0.7303754266211604,
+      0.7303754266211604,
+      0.8333333333333334,
+      0.8333333333333334,
+      0.9448529411764706,
+      0.9898558462359851,
+      0.9898558462359851
+    ]
+  },
+  "operating_point": {
+    "threshold": 0.625,
+    "rule": "maximises F1 on the calibration half of validation"
+  },
+  "libraries": {
+    "lightgbm": "4.7.0",
+    "python": "3.12.3"
+  },
+  "training_data": {
+    "dataset": "ISOMORPH Sample (single baseline rollout)",
+    "licence": "CC-BY-4.0",
+    "attribution": "\"ISOMORPH Sample\" dataset by the ISOMORPH authors, licensed under CC-BY-4.0 (paper under submission, NeurIPS 2026 Datasets & Benchmarks).",
+    "nature": "simulator-generated research benchmark (digital-twin supply chain); not observed operational data",
+    "scenario": {
+      "name": "baseline_item50",
+      "n_items": 50,
+      "phi_lo": 0.999,
+      "phi_hi": 0.9996,
+      "shock_count_scale": 1.0,
+      "shock_height_scale": 1.0,
+      "seasonal_scale": 1.0,
+      "containers_scale": 1.0,
+      "ss_scale": 1.0,
+      "leadtime_scale": 1.0,
+      "burst_rate_scale": 1.0,
+      "burst_height_scale": 1.0,
+      "base_lambda_lo": 80.0,
+      "base_lambda_hi": 250.0,
+      "seed": 2025,
+      "days": 52560,
+      "pipeline_mult": 7.0
+    },
+    "licence_file_sha256": "afcd7313c95fcdc744606bd748b68aa82fd4119db4a1c1c39a752efe9ac71771",
+    "files_sha256": {
+      "daily_records.parquet": "6c7460342c3c9df6eeafb80830e93bc865ca528484fdd620fe30a40350fb9c67",
+      "scenario.json": "65ad1e668ee79e5eb833dcc1194cd7f4e2f5b8826fdec17c19292be36dbc6fb7",
+      "demand_signals_cols.txt": "9005c508d80e200debe51fb938c1c0934cb7622838eb9cef128752d62b86467f"
+    },
+    "split_origin_ranges": {
+      "train": [
+        27,
+        36785
+      ],
+      "val_select": [
+        36792,
+        40727
+      ],
+      "val_calib": [
+        40734,
+        44669
+      ],
+      "test": [
+        44676,
+        52553
+      ]
+    },
+    "seed": 42,
+    "config": {
+      "seed": 42,
+      "horizon_days": 7,
+      "split": {
+        "train": 0.7,
+        "val": 0.15,
+        "test": 0.15,
+        "val_calibration_fraction": 0.5
+      },
+      "sampling": {
+        "train_rows": 600000
+      },
+      "population": "item-days with no backlog at the origin day (shortage onset)",
+      "lightgbm": {
+        "grid": {
+          "num_leaves": [
+            7,
+            15,
+            31
+          ]
+        },
+        "fixed": {
+          "objective": "binary",
+          "learning_rate": 0.05,
+          "n_estimators": 800,
+          "min_child_samples": 200,
+          "feature_fraction": 0.8,
+          "bagging_fraction": 0.8,
+          "bagging_freq": 1,
+          "lambda_l2": 5.0,
+          "n_jobs": 1,
+          "verbose": -1
+        },
+        "early_stopping_rounds": 50
+      }
+    }
+  },
+  "benchmark_test_metrics": {
+    "lightgbm_calibrated": {
+      "n": 380681,
+      "positives": 5057,
+      "base_rate": 0.013284088252368782,
+      "roc_auc": 0.9877747961042552,
+      "pr_auc": 0.8826409553358618,
+      "brier": 0.002700415627443481,
+      "ece": 0.000842491537431019,
+      "threshold": 0.625,
+      "precision": 0.9080483736447039,
+      "recall": 0.8611825192802056,
+      "flag_rate": 0.012598474838513085,
+      "f1": 0.8839947224195677
+    },
+    "lightgbm_uncalibrated": {
+      "n": 380681,
+      "positives": 5057,
+      "base_rate": 0.013284088252368782,
+      "roc_auc": 0.9876569925249027,
+      "pr_auc": 0.8908430952314548,
+      "brier": 0.004060483257291783,
+      "ece": 0.009027388510077417
+    },
+    "lightgbm_stock_only": {
+      "n": 380681,
+      "positives": 5057,
+      "base_rate": 0.013284088252368782,
+      "roc_auc": 0.841884361294469,
+      "pr_auc": 0.49407252909677524,
+      "brier": 0.009568969332443472,
+      "ece": 0.005252370161069493
+    },
+    "logistic_regression": {
+      "n": 380681,
+      "positives": 5057,
+      "base_rate": 0.013284088252368782,
+      "roc_auc": 0.9888419842475521,
+      "pr_auc": 0.8575962921759054,
+      "brier": 0.003792452458162692,
+      "ece": 0.0016623158377553954
+    },
+    "cover_days_rule_logistic": {
+      "n": 380681,
+      "positives": 5057,
+      "base_rate": 0.013284088252368782,
+      "roc_auc": 0.8576903046184619,
+      "pr_auc": 0.4572619914931329,
+      "brier": 0.009046542510412653,
+      "ece": 0.003075272625335657
+    },
+    "constant_base_rate": {
+      "n": 380681,
+      "positives": 5057,
+      "base_rate": 0.013284088252368782,
+      "roc_auc": 0.5,
+      "pr_auc": 0.013284088252368782,
+      "brier": 0.013117802168625407,
+      "ece": 0.0031907549190354524
+    }
+  },
+  "applicability": "Benchmark-only. Requires >=28 days of demand, on-hand, in-transit and new-backlog history per item at the node, and is defined for shortage onset (no backlog today). Probabilities are calibrated to the ISOMORPH replenishment policy and must not be read as probabilities for any other supply system."
+}

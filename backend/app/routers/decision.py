@@ -31,7 +31,7 @@ def priority(limit: int = Query(0, ge=0, le=100), c: Ctx = Depends()):
 
 @router.get("/priority/weights")
 def priority_weights():
-    return {"weights": WEIGHTS, "note": "Fixed, documented prototype assumptions; not calibrated against real operations."}
+    return {"weights": WEIGHTS, "note": "Fixed, documented assumptions; not calibrated against real operations."}
 
 
 @router.get("/allocation")
@@ -46,7 +46,7 @@ def allocation(c: Ctx = Depends()):
               "used": c.snap.depot_stock[(d, s)] - a.depot_stock_after[(d, s)]}
              for (d, s) in c.snap.depot_stock if c.snap.depot_stock[(d, s)] != a.depot_stock_after[(d, s)]]
     return {
-        "label": "Decision-Support Allocation \u2014 Synthetic Scenario",
+        "label": "Decision-Support Allocation \u2014 Illustrative Scenario",
         "total_need": c.res.need, "fleet_capacity": c.res.capacity, "allocated": a.used, "unmet": a.unmet, "capacity_left": a.capacity_left,
         "pooled_fleet_deficit": c.res.deficit, "unmet_by_reason": reasons,
         "rows": [{"rank": k, "location": r.prio.item.location_id, "supply": r.prio.item.supply_id, "score": r.prio.score,

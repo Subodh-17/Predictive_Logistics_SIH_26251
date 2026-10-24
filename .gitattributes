@@ -1,0 +1,2 @@
+# Ensure ML model artifacts maintain exact byte-for-byte LF line endings for SHA-256 verification
+ml/artifacts/**/model.txt -text

@@ -1,35 +1,112 @@
-import { useState } from 'react'
-import { ApiError, post } from '../api'
+import { useRef, useState } from 'react'
+import { ApiError, post, useApi } from '../api'
 import { useApp } from '../state'
+import { useAuth } from '../auth'
 import { BASELINE, type Scenario, type SimResult } from '../types'
-import { Btn, Card, ErrorBox, Grid2, Note, PageTitle, StatusTag, Table } from '../components/ui'
+import { Btn, Card, ErrorBox, Grid2, Loading, Note, PageTitle, StatusTag, Table } from '../components/ui'
 import { fx, roadLabel, weatherLabel } from '../format'
 import RecommendedResponse from '../components/RecommendedResponse'
 
+interface SavedRun { id: number; created_at: string; params: { demand: number; weather: number; road: number; vehicles: number } }
+interface Cmp { a: { id: number }; b: { id: number }; same_baseline: boolean; note: string
+  metrics: { metric: string; label: string; a: number; b: number; delta: number; delta_pct: number | null; better: 'a' | 'b' | 'same' }[] }
+const runLabel = (r: SavedRun) => `#${r.id} · demand +${Math.round(r.params.demand * 100)}% · weather ${r.params.weather} · road ${r.params.road} · fleet ${Math.round(r.params.vehicles * 100)}%`
+
+/** Compare two saved scenario runs (stored results, nothing is re-simulated); warns when their starting state differed. */
+function CompareRuns({ tick }: { tick: number }) {
+  const runs = useApi<SavedRun[]>('/api/simulation/runs?limit=20', tick)
+  const [ids, setIds] = useState<{ a: string; b: string }>({ a: '', b: '' })
+  const ready = ids.a !== '' && ids.b !== '' && ids.a !== ids.b
+  const cmp = useApi<Cmp>(ready ? `/api/simulation/compare?a=${ids.a}&b=${ids.b}` : null)
+  const list = runs.data ?? []
+  return (
+    <Card title="COMPARE SAVED SCENARIOS" className="mb-3">
+      {runs.loading ? <Loading what="saved scenarios" /> : runs.error ? <ErrorBox error={runs.error} /> : list.length < 2 ? <p className="text-mu" data-testid="cmp-empty">Run at least two simulations to compare them side by side.</p> : (<>
+        <div className="grid gap-3 md:grid-cols-2 mb-2 min-w-0">
+          {(['a', 'b'] as const).map(k => (
+            <label key={k} className="text-[11px] text-mu min-w-0 block">SCENARIO {k.toUpperCase()}<br />
+              <select className="w-full max-w-full min-w-0 truncate" value={ids[k]} onChange={e => setIds({ ...ids, [k]: e.target.value })} data-testid={`cmp-${k}`}><option value="">choose…</option>{list.map(r => <option key={r.id} value={r.id}>{runLabel(r)}</option>)}</select></label>))}
+        </div>
+        {ids.a !== '' && ids.a === ids.b && <p role="alert" className="text-wr text-[12px]">Choose two different runs.</p>}
+        {ready && cmp.loading && <Loading what="scenario comparison" />}
+        {ready && !cmp.loading && cmp.error && <ErrorBox error={cmp.error} />}
+        {ready && !cmp.loading && !cmp.error && cmp.data && (<div data-testid="cmp-result">
+          <p role="status" className={`text-[12px] mb-2 ${cmp.data.same_baseline ? 'text-mu' : 'text-wr'}`}>{cmp.data.note}</p>
+          <Table head={['METRIC', 'A', 'B', 'B − A', 'BETTER']}>
+            {cmp.data.metrics.map(m => <tr key={m.metric}><td>{m.label}</td><td>{m.a}</td><td>{m.b}</td><td>{m.delta > 0 ? '+' : ''}{m.delta}{m.delta_pct !== null ? ` (${m.delta_pct > 0 ? '+' : ''}${m.delta_pct}%)` : ''}</td>
+              <td>{m.better === 'same' ? '—' : m.better.toUpperCase()}</td></tr>)}
+          </Table></div>)}
+      </>)}
+    </Card>
+  )
+}
+
+const sameScenario = (a: Scenario, b: Scenario): boolean =>
+  a.demand === b.demand && a.weather === b.weather && a.road === b.road && a.vehicles === b.vehicles
+
 export default function Simulation() {
   const { scenario, applyScenario, resetScenario } = useApp()
+  const { can } = useAuth()
+  const canRun = can('operator')
   const [p, setP] = useState<Scenario>(scenario)
   const [res, setRes] = useState<SimResult | null>(null)
+  const [resScenario, setResScenario] = useState<Scenario | null>(null)
+  const runSeq = useRef(0)
+  const [runCount, setRunCount] = useState(0)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<ApiError | null>(null)
 
-  async function run(): Promise<SimResult | null> {
+  async function run(target: Scenario = p): Promise<SimResult | null> {
+    const seq = ++runSeq.current
     setBusy(true); setErr(null)
     try {
-      const r = await post<SimResult>('/api/simulation/run', { demand_increase: p.demand, weather_severity: p.weather, road_degradation: p.road, vehicle_availability: p.vehicles })
-      setRes(r); return r
-    } catch (e) { setErr(e instanceof ApiError ? e : new ApiError(0, 'UNKNOWN', String(e))); return null } finally { setBusy(false) }
+      const r = await post<SimResult>('/api/simulation/run', {
+        demand_increase: target.demand,
+        weather_severity: target.weather,
+        road_degradation: target.road,
+        vehicle_availability: target.vehicles,
+      })
+      if (seq === runSeq.current) {
+        setRes(r)
+        setResScenario(target)
+        setRunCount(c => c + 1)
+      }
+      return r
+    } catch (e) {
+      if (seq === runSeq.current) {
+        setErr(e instanceof ApiError ? e : new ApiError(0, 'UNKNOWN', String(e)))
+      }
+      return null
+    } finally {
+      if (seq === runSeq.current) {
+        setBusy(false)
+      }
+    }
   }
   const slider = (label: string, id: string, min: number, max: number, val: number, set: (n: number) => void, text: string) => (
-    <div className="grid gap-2.5 items-center mb-3 sm:grid-cols-[150px_1fr_80px]">
-      <label htmlFor={id}>{label}</label>
-      <input id={id} type="range" min={min} max={max} step={1} value={val} onChange={e => set(Number(e.target.value))} />
-      <b className="font-mono" data-testid={id + '-label'}>{text}</b>
+    <div className="grid gap-2.5 items-center mb-3.5 sm:grid-cols-[160px_1fr_90px]">
+      <label htmlFor={id} className="text-[12.5px] font-medium text-tx">{label}</label>
+      <input id={id} type="range" min={min} max={max} step={1} value={val} disabled={busy} onChange={e => set(Number(e.target.value))} />
+      <div className="bg-ins/90 border border-ln/70 px-2 py-0.5 rounded-sm text-center">
+        <b className="font-mono text-[12px] text-act" data-testid={id + '-label'}>{text}</b>
+      </div>
     </div>)
   const row = (l: string, k: string, f: (x: number) => string = x => fx(x), bad = 1) => {
     if (!res) return null
     const b = res.before[k], a = res.after[k], dv = a - b
-    return <tr key={k}><td>{l}</td><td>{f(b)}</td><td>{f(a)}</td><td className={dv * bad > 0 ? 'text-cr' : dv * bad < 0 ? 'text-ok' : ''}>{dv > 0 ? '+' : ''}{f(dv)}</td></tr>
+    const isWorse = dv * bad > 0, isBetter = dv * bad < 0
+    return (
+      <tr key={k}>
+        <td>{l}</td>
+        <td className="tabular-nums">{f(b)}</td>
+        <td className="tabular-nums font-semibold">{f(a)}</td>
+        <td>
+          <span className={`inline-block px-1.5 py-0.5 rounded-xs font-mono text-[11.5px] font-semibold tabular-nums ${isWorse ? 'bg-cr/10 text-cr border border-cr/30' : isBetter ? 'bg-ok/10 text-ok border border-ok/30' : 'text-mu'}`}>
+            {dv > 0 ? '+' : ''}{f(dv)}
+          </span>
+        </td>
+      </tr>
+    )
   }
   return (
     <div>
@@ -41,12 +118,18 @@ export default function Simulation() {
           {slider('Road condition', 'sr', 0, 100, Math.round(p.road * 100), n => setP({ ...p, road: n / 100 }), roadLabel(p.road))}
           {slider('Vehicle availability', 'sv', 0, 50, Math.round((1 - p.vehicles) * 100), n => setP({ ...p, vehicles: 1 - n / 100 }), Math.round(p.vehicles * 100) + '%')}
           <div className="flex flex-wrap gap-2">
-            <Btn primary disabled={busy} onClick={() => { void run() }}>{busy ? 'RUNNING…' : 'RUN SIMULATION'}</Btn>
-            <Btn disabled={busy} onClick={async () => { const r = res ?? await run(); if (r) applyScenario(p) }}>APPLY TO ALL SCREENS</Btn>
-            <Btn disabled={busy} onClick={() => { setP(BASELINE); setRes(null); resetScenario() }}>RESET</Btn>
+            <Btn primary disabled={busy || !canRun} onClick={() => { void run(p) }}>{busy ? 'RUNNING…' : 'RUN SIMULATION'}</Btn>
+            <Btn disabled={busy} onClick={async () => {
+              if (!canRun) { applyScenario(p); return }
+              const hasMatch = res !== null && resScenario !== null && sameScenario(resScenario, p)
+              const r = hasMatch ? res : await run(p)
+              if (r) applyScenario(p)
+            }}>APPLY TO ALL SCREENS</Btn>
+            <Btn disabled={busy} onClick={() => { setP(BASELINE); setRes(null); setResScenario(null); resetScenario() }}>RESET</Btn>
           </div>
           {err && <div className="mt-3"><ErrorBox error={err} /></div>}
-          <Note>The scenario is evaluated by the FastAPI backend (POST /api/simulation/run) against the live PostgreSQL inventory and stored in simulation_runs.</Note>
+          {!canRun && <p role="note" data-testid="sim-readonly" className="mt-3 text-wr text-[12px]">Running and saving a before/after simulation requires the operator role. You can still apply these settings to every screen to see the recalculated figures.</p>}
+          <Note>Each run is evaluated by the backend against the current inventory and stored as a simulation record.</Note>
         </Card>
         {!res ? (
           <Card title="BEFORE VS AFTER"><p>Set the controls and press RUN SIMULATION. The engine recalculates shortage locations, inventory risk, ETA, route risk, transport capacity, allocation and recommendations against the baseline.</p></Card>
@@ -71,6 +154,7 @@ export default function Simulation() {
           </Table>
           <Note>Apply the scenario to all screens to see the recalculated recommendations, allocation plan and route comparison on the Dashboard and GIS screens.</Note>
         </Card></>}
+      <CompareRuns tick={runCount} />
     </div>
   )
 }

@@ -1,26 +1,20 @@
+.env
+.env.*
+!.env.example
 node_modules/
 dist/
 __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
-.env
-# Secrets
+venv/
+*.log
+*.zip
+*.tsbuildinfo
 secrets/
 *.key
 *.pem
-credentials.json
-
-# IDE
-.vscode/
-.idea/
-*.swp
-.DS_Store
-
-# Test/Coverage
-.coverage
-coverage.xml
-htmlcov/
-
-# Logs
-*.log
+*.pfx
+*.pkcs12
+*.dump
+*credentials*.json

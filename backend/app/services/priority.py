@@ -3,11 +3,11 @@
 score = 100 x ( 0.30 shortage urgency   (1 - days of cover / 10)
               + 0.15 shortage volume    (unmet share of 14-day demand)
               + 0.15 stock deficit      (share of safety stock missing)
-              + 0.15 supply criticality (fixed prototype weight per supply type)
+              + 0.15 supply criticality (fixed configured weight per supply type)
               + 0.10 lead-time pressure (replenishment lead time vs remaining cover)
               + 0.10 route feasibility  (risk of best feasible route; 1.0 if none)
               + 0.05 transport capacity (quantity to move vs serving depot capacity) )
-Weights are fixed, documented assumptions of this prototype.
+Weights are fixed, documented assumptions of this system.
 """
 from __future__ import annotations
 

@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class ScenarioIn(BaseModel):
     """What-If scenario. All fields are optional; defaults are the baseline."""
+    model_config = ConfigDict(extra="forbid")
     demand_increase: float = Field(0.0, ge=0.0, le=0.5, description="0..0.5 = +0%..+50% demand")
     weather_severity: float = Field(0.0, ge=0.0, le=1.0, description="0 normal .. 1 severe")
     road_degradation: float = Field(0.0, ge=0.0, le=1.0, description="0 good .. 1 poor")
@@ -16,18 +17,21 @@ class ScenarioIn(BaseModel):
 
 class IotUpdateIn(BaseModel):
     """A simulated ESP32 / RFID scan reported to the backend."""
-    model_config = ConfigDict(json_schema_extra={"example": {"device_id": "ESP32-SIM-01", "tag_id": "RFID-SIM-1234", "event_type": "ISSUE",
+    model_config = ConfigDict(extra="forbid", json_schema_extra={"example": {"device_id": "ESP32-SIM-01", "tag_id": "RFID-SIM-1234", "event_type": "ISSUE",
                                                              "location_id": "Base_04", "supply_id": "Medical", "quantity": 50}})
-    device_id: str = Field(min_length=3, max_length=40)
-    tag_id: str = Field(min_length=3, max_length=60)
+    device_id: str = Field(min_length=3, max_length=40, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]*$")
+    tag_id: str = Field(min_length=3, max_length=60, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]*$")
     event_type: Literal["RECEIVE", "ISSUE", "COUNT"]
-    location_id: str
-    supply_id: str
+    location_id: str = Field(min_length=1, max_length=40, pattern=r"^[A-Za-z0-9_.-]+$")
+    supply_id: str = Field(min_length=1, max_length=40, pattern=r"^[A-Za-z0-9_.-]+$")
     quantity: float = Field(ge=0, le=1_000_000)
     note: str | None = Field(None, max_length=200)
+    event_id: str | None = Field(None, min_length=8, max_length=64, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+                                 description="Optional idempotency key: a second request with the same key is rejected (409) instead of being applied twice.")
 
 
 class IotSimulateIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     count: int = Field(5, ge=1, le=50)
 
 

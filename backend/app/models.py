@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM models for the PostgreSQL/PostGIS schema in db/schema.sql (all data is fictional/synthetic)."""
+"""SQLAlchemy ORM models for the PostgreSQL/PostGIS schema defined by db/migrations (all scenario data is fictional and simulated)."""
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -108,6 +108,9 @@ class ForecastRow(Base):
     kind: Mapped[str] = mapped_column(String)
     value: Mapped[float] = mapped_column(Float)
     model: Mapped[str] = mapped_column(String, default="ewma-weather-seasonal-v1")
+    lo: Mapped[float | None] = mapped_column(Float, nullable=True)
+    hi: Mapped[float | None] = mapped_column(Float, nullable=True)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class AlertRow(Base):
@@ -166,6 +169,7 @@ class IotEventRow(Base):
     stock_after: Mapped[float] = mapped_column(Numeric(12, 1))
     simulated: Mapped[bool] = mapped_column(Boolean, default=True)
     payload = mapped_column(JSONB, default=dict)
+    event_id: Mapped[str | None] = mapped_column(String, nullable=True)
 
 
 class SimulationRunRow(Base):
@@ -176,3 +180,28 @@ class SimulationRunRow(Base):
     before = mapped_column(JSONB)
     after = mapped_column(JSONB)
     explanation = mapped_column(JSONB)
+
+
+class UserRow(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    username: Mapped[str] = mapped_column(String)
+    password_hash: Mapped[str] = mapped_column(String)
+    role: Mapped[str] = mapped_column(String)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    token_version: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class AuditLogRow(Base):
+    __tablename__ = "audit_log"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    actor: Mapped[str | None] = mapped_column(String, nullable=True)
+    action: Mapped[str] = mapped_column(String)
+    target: Mapped[str | None] = mapped_column(String, nullable=True)
+    outcome: Mapped[str] = mapped_column(String)
+    client_ip: Mapped[str | None] = mapped_column(String, nullable=True)
+    detail = mapped_column(JSONB, default=dict)

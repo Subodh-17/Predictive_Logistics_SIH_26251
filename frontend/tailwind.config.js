@@ -13,7 +13,20 @@ export default {
       },
       fontFamily: {
         mono: ['ui-monospace', 'Menlo', 'Consolas', 'monospace'],
-        sans: ['system-ui', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+      },
+      boxShadow: {
+        'xs': '0 1px 2px 0 rgba(0, 0, 0, 0.1)',
+        'bento': '0 2px 8px -1px rgba(0, 0, 0, 0.25), 0 1px 3px -1px rgba(0, 0, 0, 0.2)',
+        'bento-accent': '0 0 18px -4px rgba(201, 164, 76, 0.25)',
+        'glass-highlight': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.07)',
+        'glass-highlight-light': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.75)',
+      },
+      borderRadius: {
+        'xs': '2px',
+        'sm': '3px',
+        'DEFAULT': '4px',
+        'md': '6px',
       },
     },
   },

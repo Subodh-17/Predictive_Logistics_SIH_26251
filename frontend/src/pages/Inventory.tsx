@@ -2,8 +2,9 @@ import { useState, type FormEvent } from 'react'
 import { ApiError, get, post, useApi } from '../api'
 import IotFlow, { type FlowState } from '../components/IotFlow'
 import { useApp } from '../state'
+import { useAuth } from '../auth'
 import { usePalette } from '../theme'
-import { Async, Btn, Card, ErrorBox, GridHalf, PageTitle, StatusTag, Table, Tag } from '../components/ui'
+import { Async, Btn, act, Card, ErrorBox, GridHalf, PageTitle, StatusTag, Table, Tag } from '../components/ui'
 import { LineChartBox } from '../components/Charts'
 import { fx } from '../format'
 import type { InvItem, IotEvent } from '../types'
@@ -27,25 +28,32 @@ export default function Inventory() {
   return (
     <div>
       <PageTitle>INVENTORY · SUPPLY RISK</PageTitle>
-      <div className="flex flex-wrap gap-2 mb-3 items-center">
-        <label className="text-mu text-[11px]" htmlFor="il">LOCATION</label>
-        <select id="il" value={f.l} onChange={e => setF({ ...f, l: e.target.value })}><option value="">All</option>{LOCS.map(x => <option key={x}>{x}</option>)}</select>
-        <label className="text-mu text-[11px]" htmlFor="it">SUPPLY</label>
-        <select id="it" value={f.t} onChange={e => setF({ ...f, t: e.target.value })}><option value="">All</option>{SUPS.map(x => <option key={x}>{x}</option>)}</select>
-        <label className="text-mu text-[11px]" htmlFor="is">RISK</label>
-        <select id="is" value={f.s} onChange={e => setF({ ...f, s: e.target.value })}><option value="">All</option>{['CRITICAL', 'WARNING', 'NORMAL'].map(x => <option key={x}>{x}</option>)}</select>
-        <span className="font-mono" data-testid="item-count">{rows.length} items</span>
+      <div className="bento-card px-3.5 py-2.5 mb-3 flex flex-wrap gap-3 items-center">
+        <div className="flex items-center gap-1.5">
+          <label className="text-mu font-mono text-[11px] uppercase tracking-wide" htmlFor="il">LOCATION</label>
+          <select id="il" value={f.l} onChange={e => setF({ ...f, l: e.target.value })}><option value="">All</option>{LOCS.map(x => <option key={x}>{x}</option>)}</select>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <label className="text-mu font-mono text-[11px] uppercase tracking-wide" htmlFor="it">SUPPLY</label>
+          <select id="it" value={f.t} onChange={e => setF({ ...f, t: e.target.value })}><option value="">All</option>{SUPS.map(x => <option key={x}>{x}</option>)}</select>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <label className="text-mu font-mono text-[11px] uppercase tracking-wide" htmlFor="is">RISK</label>
+          <select id="is" value={f.s} onChange={e => setF({ ...f, s: e.target.value })}><option value="">All</option>{['CRITICAL', 'WARNING', 'NORMAL'].map(x => <option key={x}>{x}</option>)}</select>
+        </div>
+        <span className="font-mono text-[11px] ml-auto bg-ins px-2.5 py-1 border border-ln/70 rounded-sm" data-testid="item-count">{rows.length} items</span>
       </div>
       {cur && <Card title={`STOCK PROJECTION · ${cur.location} · ${cur.supply} · 14 D`} className="mb-3">
         <Async state={proj} what="projection">{p => (
           <LineChartBox xFormat={s => s} height={220} data={p.days.map((d, i) => ({ date: 'D+' + d, stock: p.projected_stock[i], safety: p.safety_stock })) as never}
             lines={[{ key: 'stock', name: 'Projected stock', color: pal.accent }, { key: 'safety', name: 'Safety stock', color: pal.danger, dashed: true }]} />)}</Async>
       </Card>}
+      <RiskBasis refreshKey={refreshKey} />
       <Card title="INVENTORY POSITION" className="mb-3">
         <Async state={inv} what="inventory">{() => (
           <Table head={['LOCATION', 'SUPPLY', 'STOCK', 'SAFETY', 'DAILY USE', 'DAYS LEFT', 'PRED. SHORTAGE 14 D', 'RISK']}>
             {rows.map(i => (
-              <tr key={i.location + i.supply} className={`row ${cur && cur.location + cur.supply === i.location + i.supply ? 'sel' : ''}`} onClick={() => setSelKey(i.location + i.supply)}>
+              <tr key={i.location + i.supply} className={`row ${cur && cur.location + cur.supply === i.location + i.supply ? 'sel' : ''}`} {...act(() => setSelKey(i.location + i.supply))}>
                 <td>{i.location}</td><td>{i.supply}</td><td>{fx(i.stock)}</td><td>{fx(i.safety_stock)}</td><td>{fx(i.daily_use)}</td><td>{i.days_left.toFixed(1)}</td><td>{fx(i.shortage_14d)}</td><td><StatusTag s={i.status} /></td></tr>))}
             {!rows.length && <tr><td colSpan={8}>No items match filters.</td></tr>}
           </Table>)}</Async>
@@ -66,7 +74,33 @@ export default function Inventory() {
   )
 }
 
+interface Basis { method: string; source: string; horizon_days: number; status_rules: Record<string, string>; predicted_shortage: string; limitations: string[]
+  forecast_model: { model_id: string; family: string; fallback_reason: string | null }
+  shortage_onset_model: { integrated_with_inventory_status: boolean; reason: string; required_inputs: Record<string, string>; available_in_application: Record<string, boolean> } }
+
+/** Source, horizon, rules and limitations of every risk figure on this page (from /api/inventory/risk-basis). */
+function RiskBasis({ refreshKey }: { refreshKey?: number }) {
+  const b = useApi<Basis>('/api/inventory/risk-basis', refreshKey)
+  return (
+    <details className="bento-card p-3.5 mb-3" data-testid="risk-basis">
+      <summary className="cursor-pointer font-mono text-[11px] tracking-[.12em] font-semibold text-mu hover:text-tx transition-colors select-none">
+        HOW IS THIS RISK ESTIMATED? · SOURCE, HORIZON, LIMITATIONS
+      </summary>
+      <Async state={b} what="risk method">{x => (
+        <div className="mt-3 text-[12.5px] space-y-2 border-t border-ln/60 pt-3">
+          <p><b>Method:</b> {x.method}. {x.source}</p>
+          <p><b>Forecast used:</b> <span className="font-mono text-act">{x.forecast_model.model_id}</span> ({x.forecast_model.family.replace('_', ' ')}){x.forecast_model.fallback_reason ? ` — ${x.forecast_model.fallback_reason}` : ''}.</p>
+          <p><b>Horizon:</b> {x.horizon_days} days. Predicted shortage = {x.predicted_shortage}.</p>
+          <ul className="list-disc pl-5 space-y-0.5">{Object.entries(x.status_rules).map(([k, v]) => <li key={k}><b>{k}:</b> {v}</li>)}</ul>
+          <div><b>Limitations:</b><ul className="list-disc pl-5 space-y-0.5">{x.limitations.map(l => <li key={l}>{l}</li>)}</ul></div>
+          <p data-testid="shortage-model-status"><b>Trained shortage-onset model:</b> {x.shortage_onset_model.integrated_with_inventory_status ? 'Used for status.' : 'Not used for these statuses.'} {x.shortage_onset_model.reason}</p>
+        </div>)}</Async>
+    </details>
+  )
+}
+
 function IotControls({ onDone, onFlow }: { onDone: () => void; onFlow: (s: FlowState | null) => void }) {
+  const { can } = useAuth()
   const [v, setV] = useState({ event_type: 'RECEIVE', location_id: 'Base_04', supply_id: 'Medical', quantity: 2000 })
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<ApiError | null>(null)
@@ -90,6 +124,10 @@ function IotControls({ onDone, onFlow }: { onDone: () => void; onFlow: (s: FlowS
     const body = { device_id: 'ESP32-SIM-01', tag_id: 'RFID-SIM-' + Math.floor(1000 + Math.random() * 9000), ...v, quantity: Number(v.quantity), note: 'manual simulated scan' }
     run(async () => [await post<IotResult>('/api/iot/update', body)], { item: { l: v.location_id, s: v.supply_id }, req: { event_type: body.event_type, location_id: body.location_id, supply_id: body.supply_id, quantity: body.quantity, device_id: body.device_id, tag_id: body.tag_id } })
   }
+  if (!can('operator')) return (
+    <Card title="SIMULATED ESP32 / RFID SCANNER">
+      <p role="note" data-testid="iot-readonly">Recording inventory events requires the operator role. You have read-only access; the events recorded so far are listed alongside.</p>
+    </Card>)
   return (
     <Card title="SIMULATED ESP32 / RFID SCANNER">
       <form onSubmit={send} className="flex flex-wrap gap-2 items-end mb-3">
@@ -99,7 +137,7 @@ function IotControls({ onDone, onFlow }: { onDone: () => void; onFlow: (s: FlowS
         <label className="text-[11px] text-mu">QUANTITY<br /><input type="number" min={0} step={10} className="w-24" value={v.quantity} onChange={e => setV({ ...v, quantity: Number(e.target.value) })} /></label>
         <Btn type="submit" primary disabled={busy}>SEND SCAN</Btn>
         <Btn disabled={busy} onClick={() => run(async () => (await post<{ events: IotResult[] }>('/api/iot/simulate', { count: 5 })).events)}>RUN SIMULATOR ×5</Btn>
-        <Btn disabled={busy} onClick={() => run(async () => { await post('/api/iot/reset'); return [] }, { reset: true })}>RESET INVENTORY</Btn>
+        {can('admin') && <Btn disabled={busy} onClick={() => run(async () => { await post('/api/iot/reset'); return [] }, { reset: true })}>RESET INVENTORY</Btn>}
       </form>
       {err && <ErrorBox error={err} />}
       {out && out.length > 0 && (

@@ -1,0 +1,155 @@
+{
+  "generated_utc": "2026-10-10T18:49:47+00:00",
+  "horizon_days": 7,
+  "split_origin_ranges": {
+    "train": [
+      27,
+      36785
+    ],
+    "val_select": [
+      36792,
+      40727
+    ],
+    "val_calib": [
+      40734,
+      44669
+    ],
+    "test": [
+      44676,
+      52553
+    ]
+  },
+  "label_definition": "any new_backlog_today > 0 on days t+1..t+7 at the destination node; population = item-days with backlog == 0 at t",
+  "validation_grid": [
+    {
+      "num_leaves": 7,
+      "best_iteration": 11,
+      "val_pr_auc": 0.2313217101376878,
+      "fit_seconds": 3.9
+    },
+    {
+      "num_leaves": 15,
+      "best_iteration": 5,
+      "val_pr_auc": 0.22351822374766436,
+      "fit_seconds": 3.5
+    },
+    {
+      "num_leaves": 31,
+      "best_iteration": 5,
+      "val_pr_auc": 0.22469951580111192,
+      "fit_seconds": 3.6
+    }
+  ],
+  "selected": {
+    "num_leaves": 7,
+    "best_iteration": 11,
+    "val_pr_auc": 0.2313217101376878,
+    "fit_seconds": 3.9
+  },
+  "operating_point": {
+    "threshold": 0.625,
+    "rule": "maximises F1 on the calibration half of validation"
+  },
+  "test_onset_population": {
+    "lightgbm_calibrated": {
+      "n": 380681,
+      "positives": 5057,
+      "base_rate": 0.013284088252368782,
+      "roc_auc": 0.9877747961042552,
+      "pr_auc": 0.8826409553358618,
+      "brier": 0.002700415627443481,
+      "ece": 0.000842491537431019,
+      "threshold": 0.625,
+      "precision": 0.9080483736447039,
+      "recall": 0.8611825192802056,
+      "flag_rate": 0.012598474838513085,
+      "f1": 0.8839947224195677
+    },
+    "lightgbm_uncalibrated": {
+      "n": 380681,
+      "positives": 5057,
+      "base_rate": 0.013284088252368782,
+      "roc_auc": 0.9876569925249027,
+      "pr_auc": 0.8908430952314548,
+      "brier": 0.004060483257291783,
+      "ece": 0.009027388510077417
+    },
+    "lightgbm_stock_only": {
+      "n": 380681,
+      "positives": 5057,
+      "base_rate": 0.013284088252368782,
+      "roc_auc": 0.841884361294469,
+      "pr_auc": 0.49407252909677524,
+      "brier": 0.009568969332443472,
+      "ece": 0.005252370161069493
+    },
+    "logistic_regression": {
+      "n": 380681,
+      "positives": 5057,
+      "base_rate": 0.013284088252368782,
+      "roc_auc": 0.9888419842475521,
+      "pr_auc": 0.8575962921759054,
+      "brier": 0.003792452458162692,
+      "ece": 0.0016623158377553954
+    },
+    "cover_days_rule_logistic": {
+      "n": 380681,
+      "positives": 5057,
+      "base_rate": 0.013284088252368782,
+      "roc_auc": 0.8576903046184619,
+      "pr_auc": 0.4572619914931329,
+      "brier": 0.009046542510412653,
+      "ece": 0.003075272625335657
+    },
+    "constant_base_rate": {
+      "n": 380681,
+      "positives": 5057,
+      "base_rate": 0.013284088252368782,
+      "roc_auc": 0.5,
+      "pr_auc": 0.013284088252368782,
+      "brier": 0.013117802168625407,
+      "ece": 0.0031907549190354524
+    }
+  },
+  "test_all_days_context": {
+    "persistence_backlog_gt_0": {
+      "n": 393850,
+      "positives": 17565,
+      "base_rate": 0.044598197283229654,
+      "roc_auc": 0.8551706373908999,
+      "pr_auc": 0.6891950513768602,
+      "brier": 0.014518217595531294,
+      "ece": 0.014518217595531293,
+      "threshold": 0.5,
+      "precision": 0.9498063634292657,
+      "recall": 0.7120979220039853,
+      "flag_rate": 0.03343658753332487,
+      "f1": 0.813951975011388
+    },
+    "n": 393850,
+    "base_rate": 0.044598197283229654,
+    "share_of_positive_days_that_are_onset": 0.2879020779960148
+  },
+  "reliability_test": [
+    {
+      "bin": 9,
+      "mean_predicted": 0.01358825258209507,
+      "observed_rate": 0.013284088252368782,
+      "n": 380681
+    }
+  ],
+  "feature_gain_importance": {
+    "in_transit_ratio": 318597,
+    "cover_plus_pipeline_days": 62740,
+    "days_since_shortage": 17079,
+    "cover_days_28": 9071,
+    "shortage_days_last_28": 7809,
+    "cover_days_7": 5912,
+    "in_transit_change_7d": 3742,
+    "on_hand_change_7d": 1933,
+    "demand_ratio_7v28": 47,
+    "backlog_ratio": 0,
+    "demand_cv_28": 0
+  },
+  "stock_only_note": "lightgbm_stock_only uses only on-hand cover and demand statistics (no backlog / pipeline / shortage history)"
+}

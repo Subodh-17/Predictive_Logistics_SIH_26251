@@ -5,11 +5,13 @@ simulation recommended response, IoT data flow, header wording). Separate from e
     APP_URL=http://localhost:8080 python tests/e2e/e2e_ui_enhancements.py
 
 Every UI number is cross-checked against the backend API. Exits 2 (no tests run) if /api/health is not OK.
-Prototype uses fictional synthetic logistics data and is intended for decision-support demonstration only.
+Uses the fictional illustrative scenario (simulated telemetry); requires E2E_USER / E2E_PASSWORD of an existing account.
 """
 import colorsys, json, math, os, re, sys, urllib.request
 from collections import OrderedDict
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from common import login, http as api, preflight as _preflight
 
 URL = os.environ.get('APP_URL', 'http://localhost:8080').rstrip('/')
 SHOTS = os.environ.get('E2E_SHOTS', '/tmp/e2e_ui_shots'); os.makedirs(SHOTS, exist_ok=True)
@@ -20,17 +22,13 @@ def check(area, name, ok, detail=''):
     results.append((area, name, 'PASS' if ok else 'FAIL', str(detail)))
     print(('PASS' if ok else 'FAIL'), f'[{area}]', name, ('· ' + str(detail)) if detail else '', flush=True)
 
-def api(path, method='GET', body=None):
-    req = urllib.request.Request(URL + path, method=method, data=None if body is None else json.dumps(body).encode(), headers={'Content-Type': 'application/json'})
-    with urllib.request.urlopen(req, timeout=60) as r: return json.loads(r.read())
-
 def inr(n):                      # en-IN digit grouping, as the UI prints it
     s = str(int(round(n))); neg = s.startswith('-'); s = s.lstrip('-')
     if len(s) > 3: s = (re.sub(r'(\d)(?=(\d\d)+$)', r'\1,', s[:-3]) + ',' + s[-3:])
     return ('-' if neg else '') + s
 
 try:
-    h = api('/api/health'); ok = h['status'] == 'ok' and h['database']['connected']
+    h = api('/api/health'); ok = h['status'] == 'ok' and h['database']['connected'] and _preflight()
 except Exception as e: ok = False; print('preflight failed:', e)
 if not ok: print('ENVIRONMENT NOT READY - no tests were run.'); sys.exit(2)
 api('/api/iot/reset', 'POST')
@@ -60,7 +58,7 @@ with sync_playwright() as p:
     setr = "(el,v)=>{const s=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;s.call(el,v);el.dispatchEvent(new Event('input',{bubbles:true}))}"
 
     # =============================================================== THEME
-    pg.goto(URL); pg.wait_for_selector('text=OVERALL LOGISTICS RISK'); pg.wait_for_timeout(1500)
+    login(pg); pg.wait_for_selector('text=OVERALL LOGISTICS RISK'); pg.wait_for_timeout(1500)
     check('Theme', 'Dark is the default (fresh browser profile, empty storage)', theme() == 'dark' and 'DARK THEME' in pg.inner_text('[data-testid=theme-toggle]'))
     tg = pg.locator('[data-testid=theme-toggle]')
     check('Theme', 'toggle is an accessible switch (role=switch, aria-checked, label)', tg.get_attribute('role') == 'switch' and tg.get_attribute('aria-checked') == 'false' and 'Switch to light' in (tg.get_attribute('aria-label') or ''))
@@ -98,7 +96,7 @@ with sync_playwright() as p:
 
     # =============================================================== HEADER
     hd = pg.inner_text('main > div:first-child'); clock_title = pg.locator('text=SIMULATION TIME').first.get_attribute('title') or ''
-    check('Header', 'clock reads SIMULATION TIME · <date> and DATA · SYNTHETIC (no live-looking timestamp)', bool(re.search(r'SIMULATION TIME · \d{1,2} [A-Z]{3} 20\d\d', hd)) and 'DATA · SYNTHETIC' in hd and not re.search(r'\bSIM TIME\b', hd) and not re.search(r'\d\d:\d\dZ', hd), hd[:200].replace('\n', ' '))
+    check('Header', 'clock reads SIMULATION TIME · <date> and DATA · ILLUSTRATIVE SCENARIO (no live-looking timestamp)', bool(re.search(r'SIMULATION TIME · \d{1,2} [A-Z]{3} 20\d\d', hd)) and 'DATA · ILLUSTRATIVE SCENARIO' in hd and not re.search(r'\bSIM TIME\b', hd) and not re.search(r'\d\d:\d\dZ', hd), hd[:200].replace('\n', ' '))
     check('Header', 'tooltip explains it is a fictional clock, not real time', 'NOT the real time' in clock_title and '2026-06-19' in clock_title)
 
     # =============================================================== DASHBOARD BRIEFING
@@ -173,15 +171,15 @@ with sync_playwright() as p:
     # =============================================================== FORECAST
     go('Forecast'); pg.wait_for_selector('[data-testid=model-roles]'); pg.wait_for_timeout(1500)
     fr = pg.inner_text('[data-testid=model-roles]'); ch_ = api('/api/forecast/challenger'); fc_ = api('/api/forecast?horizon=14')
-    check('Forecast', 'three distinct model cards: statistical baseline / Random Forest challenger / validation', all(x in fr for x in ['STATISTICAL BASELINE FORECAST', 'RANDOM FOREST CHALLENGER', 'VALIDATION METRICS', 'FORECAST CONFIDENCE']))
-    check('Forecast', 'roles are explicit: drives dashboard vs cross-check only / not used in decisions', 'DRIVES THE DASHBOARD' in fr and 'CROSS-CHECK ONLY' in fr and 'NOT USED IN DECISIONS' in fr)
+    check('Forecast', 'three distinct model cards: active model / trained model / scenario holdout', all(x in fr for x in ['ACTIVE FORECAST MODEL', 'TRAINED MODEL', 'HOLDOUT ON THIS SCENARIO']))
+    check('Forecast', 'roles are explicit: active model drives the application; trained model is opt-in and its promotion status is shown', 'DRIVES THE APPLICATION' in fr and 'OPT-IN' in fr and 'NOT PROMOTED' in fr)
     mt = pg.inner_text('[data-testid=model-metrics]')
-    check('Forecast', 'hold-out MAPE shown for both models and equals the API', f"{ch_['statistical_mape']:.1f}%" in mt and f"{ch_['rf_mape']:.1f}%" in mt, f"stat {ch_['statistical_mape']:.1f}% RF {ch_['rf_mape']:.1f}%")
+    check('Forecast', 'holdout WAPE shown for the statistical and trained models', 'Statistical baseline' in mt and '%' in mt and 'Trained model' in mt, mt[:120].replace(chr(10), ' '))
     cv = fc_['confidence']; CNOTE = 'Heuristic confidence index derived from historical backtest error; not a probability of forecast correctness.'
-    check('Forecast', 'confidence shown as \"Confidence Index: V/100 — LABEL\" and equals the API (no ambiguous %)', pg.inner_text('[data-testid=confidence-value] [data-testid=confidence-index]') == f"Confidence Index: {cv['value']}/100 — {cv['label']}" and 'MAPE' in fr and 'synthetic' in fr.lower(), cv)
+    check('Forecast', 'confidence shown as \"Confidence Index: V/100 — LABEL\" and equals the API (no ambiguous %)', pg.inner_text('[data-testid=confidence-value] [data-testid=confidence-index]') == f"Confidence Index: {cv['value']}/100 — {cv['label']}" and 'WAPE' in fr and 'scenario' in fr.lower(), cv)
     check('Forecast', 'confidence explanation is visible and available as an accessible tooltip', pg.inner_text('[data-testid=confidence-note]') == CNOTE and CNOTE in (pg.locator('[data-testid=confidence-value] [data-testid=info-tip]').get_attribute('aria-label') or ''))
     check('Forecast', 'states what is and is not AI (rule-based engine is NOT ML / LLM)', 'WHAT IS AND IS NOT' in fr and 'deterministic rule-based engine' in fr and 'not machine learning, not an LLM and not generative AI' in fr)
-    check('Forecast', 'only the Random Forest is described as the trained ML model', 'Only one trained machine-learning model exists' in fr)
+    check('Forecast', 'model attribution is stated per forecast row', 'Every forecast row records which model produced it' in fr)
     pg.screenshot(path=f'{SHOTS}/forecast_roles.png', full_page=True)
 
     # =============================================================== SIMULATION

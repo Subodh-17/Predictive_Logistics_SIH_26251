@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from fastapi import Depends, Query
+from typing import Annotated
+
+from fastapi import Depends, Path, Query
 from sqlalchemy.orm import Session
 
 from .. import repository as repo
@@ -23,3 +25,10 @@ class Ctx:
         self.db, self.p = db, p
         self.snap = repo.load_snapshot(db)
         self.res = engine.compute(self.snap, p)
+
+
+ID_PATTERN = r"^[A-Za-z0-9_.-]{1,40}$"
+# identifiers (locations, supplies) are validated at the edge: no control characters, quotes or separators ever reach a query
+IdQuery = Annotated[str, Query(pattern=ID_PATTERN, max_length=40)]
+OptIdQuery = Annotated[str | None, Query(pattern=ID_PATTERN, max_length=40)]
+IdPath = Annotated[str, Path(pattern=ID_PATTERN, max_length=40)]

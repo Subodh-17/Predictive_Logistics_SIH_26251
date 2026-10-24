@@ -1,14 +1,39 @@
-﻿services:
-  - type: web
-    name: predictive-logistics-backend
-    env: docker
-    dockerfilePath: backend/Dockerfile
+# Render Blueprint for the application. NOT executed or verified in this release (no Render account/network access was available):
+# review every value, then create the Blueprint in the Render dashboard.
+# Architecture: browser -> "web" (nginx, serves the UI and proxies /api) -> "api" (private service) -> PostgreSQL with PostGIS.
+# Audit notes (see docs/DEPLOYMENT.md section 5): the database URL from Render is accepted as-is (postgres:// and postgresql:// are normalised to the psycopg 3
+# driver); Render gives ONE database user (the owner), so the API runs as that owner unless you add the optional data-only role by hand;
+# per-client rate limits need TRUSTED_PROXY_CIDR on `web` set to Render's proxy range (unknown here, so it is left to you); the PostGIS extension must be
+# creatable by the database user (not verified).
+# Keeping UI and API behind ONE public origin is required: the session cookie is SameSite=Strict.
+databases:
+  - name: logistics-db
+    plan: basic-256mb
+    databaseName: logistics
+    user: logistics
+    ipAllowList: []   # internal connections only
+services:
+  - type: pserv
+    name: api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health/ready
     envVars:
-      - key: PORT
-        value: "8000"
-      - key: AUTO_INIT_DB
-        value: "1"
-      - key: DATABASE_URL
-        sync: false
-      - key: CORS_ORIGINS
-        sync: false
+      - { key: APP_ENV, value: production }
+      - { key: DATABASE_URL, fromDatabase: { name: logistics-db, property: connectionString } }
+      - { key: JWT_SECRET, generateValue: true }
+      - { key: CORS_ORIGINS, sync: false }              # e.g. https://<your-web-service>.onrender.com
+      - { key: BOOTSTRAP_ADMIN_USERNAME, sync: false }
+      - { key: BOOTSTRAP_ADMIN_PASSWORD, sync: false }  # remove after the first start
+      - { key: AUTO_SEED_SCENARIO, value: "1" }
+      - { key: TRUSTED_PROXY_HOPS, value: "1" }
+  - type: web
+    name: web
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    healthCheckPath: /healthz
+    envVars:
+      - { key: BACKEND_HOSTPORT, fromService: { type: pserv, name: api, property: hostport } }
+      - { key: TRUSTED_PROXY_CIDR, sync: false }        # Render's load-balancer range; unset = trust nobody (all clients then share one address for rate limits)

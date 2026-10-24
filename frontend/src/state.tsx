@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 import { BASELINE, type Scenario } from './types'
 import { qs, scenarioQs } from './api'
 
-export type Tab = 'dash' | 'fc' | 'gis' | 'inv' | 'sim'
+export type Tab = 'dash' | 'fc' | 'gis' | 'inv' | 'sim' | 'mdl' | 'sys' | 'usr'
 export interface Sel { kind: 'loc' | 'rt'; id: string }
 
 interface Ctx {

@@ -1,0 +1,9 @@
+# Training / evaluation environment (exact versions used for the shipped artefacts; Python 3.12).
+# Inference in the API needs only backend/requirements.txt.
+-r ../backend/requirements.txt   # shares the pinned runtime set (numpy, scikit-learn, scipy, lightgbm already match below)
+lightgbm==4.7.0
+numpy==2.4.4
+pandas==3.0.2
+pyarrow==26.0.0
+scikit-learn==1.8.0
+scipy==1.17.1

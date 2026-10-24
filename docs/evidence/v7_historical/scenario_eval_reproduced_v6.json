@@ -1,0 +1,611 @@
+{
+  "generated_utc": "2026-10-11T09:50:11+00:00",
+  "protocol": {
+    "origins": [
+      40,
+      43,
+      46,
+      49,
+      52,
+      55,
+      58,
+      61,
+      64,
+      67,
+      70,
+      73,
+      76,
+      79
+    ],
+    "horizons": "1..30",
+    "series": 50,
+    "rows": 21000,
+    "weather": "outlook treated as known (as in the application)",
+    "note": "scenario history is generated from the statistical model's own structure (weather x weekly x trend); it favours that model"
+  },
+  "overall": {
+    "statistical_ewma (existing)": {
+      "n": 21000,
+      "mae": 15.898476388571506,
+      "rmse": 28.250521431518035,
+      "wape": 0.046208889200145827,
+      "bias": -0.016521394493561187,
+      "mape": 0.044824016742724994,
+      "mape_zero_actuals_excluded": 0
+    },
+    "ml_plain": {
+      "n": 21000,
+      "mae": 27.069042766737308,
+      "rmse": 55.046108570083184,
+      "wape": 0.07867611759711281,
+      "bias": -0.02139228055229354,
+      "mape": 0.06311767166260802,
+      "mape_zero_actuals_excluded": 0
+    },
+    "ml_weather_adapter": {
+      "n": 21000,
+      "mae": 16.888942535567697,
+      "rmse": 30.456187009629474,
+      "wape": 0.04908767703644079,
+      "bias": -0.02790922208275502,
+      "mape": 0.04692453973928349,
+      "mape_zero_actuals_excluded": 0
+    },
+    "naive_last": {
+      "n": 21000,
+      "mae": 33.20657142857143,
+      "rmse": 60.93312337152531,
+      "wape": 0.09651483213590231,
+      "bias": -0.022378650250028026,
+      "mape": 0.08923122451592466,
+      "mape_zero_actuals_excluded": 0
+    },
+    "seasonal_naive_7": {
+      "n": 21000,
+      "mae": 25.564809523809522,
+      "rmse": 50.37410946867354,
+      "wape": 0.07430406674426555,
+      "bias": -0.024932077910753903,
+      "mape": 0.06271762578679732,
+      "mape_zero_actuals_excluded": 0
+    },
+    "trailing_mean_28": {
+      "n": 21000,
+      "mae": 27.974282312925173,
+      "rmse": 52.36513232770223,
+      "wape": 0.08130719449196888,
+      "bias": -0.04794441391852671,
+      "mape": 0.07155676132519691,
+      "mape_zero_actuals_excluded": 0
+    }
+  },
+  "by_horizon_bucket": {
+    "h01_14": {
+      "statistical_ewma (existing)": {
+        "n": 9800,
+        "mae": 13.724081134807626,
+        "rmse": 23.680934228976586,
+        "wape": 0.040027414423189196,
+        "bias": -0.011404640064295002,
+        "mape": 0.039064134104910046,
+        "mape_zero_actuals_excluded": 0
+      },
+      "ml_plain": {
+        "n": 9800,
+        "mae": 21.688020876521485,
+        "rmse": 42.597471645042006,
+        "wape": 0.06325490144775896,
+        "bias": -0.02078321114118566,
+        "mape": 0.052811940358554084,
+        "mape_zero_actuals_excluded": 0
+      },
+      "ml_weather_adapter": {
+        "n": 9800,
+        "mae": 14.896049914628342,
+        "rmse": 26.28027590759699,
+        "wape": 0.043445558019116044,
+        "bias": -0.016800298621010578,
+        "mape": 0.042322576160507774,
+        "mape_zero_actuals_excluded": 0
+      },
+      "naive_last": {
+        "n": 9800,
+        "mae": 30.546224489795918,
+        "rmse": 54.47084503827413,
+        "wape": 0.08909058280162745,
+        "bias": -0.018986654254326586,
+        "mape": 0.08524600685041916,
+        "mape_zero_actuals_excluded": 0
+      },
+      "seasonal_naive_7": {
+        "n": 9800,
+        "mae": 22.648469387755103,
+        "rmse": 43.51236160270892,
+        "wape": 0.06605612873675969,
+        "bias": -0.02123837496357992,
+        "mape": 0.05679928061993359,
+        "mape_zero_actuals_excluded": 0
+      },
+      "trailing_mean_28": {
+        "n": 9800,
+        "mae": 26.84795918367347,
+        "rmse": 50.18065307251646,
+        "wape": 0.07830428704885603,
+        "bias": -0.044641121967609866,
+        "mape": 0.06883732208394458,
+        "mape_zero_actuals_excluded": 0
+      }
+    },
+    "h01_07": {
+      "statistical_ewma (existing)": {
+        "n": 4900,
+        "mae": 12.911581875978651,
+        "rmse": 21.651254445479463,
+        "wape": 0.03789889705508914,
+        "bias": -0.009167983412915583,
+        "mape": 0.037575889501080546,
+        "mape_zero_actuals_excluded": 0
+      },
+      "ml_plain": {
+        "n": 4900,
+        "mae": 18.67559201767033,
+        "rmse": 35.91926894943771,
+        "wape": 0.05481778655157115,
+        "bias": -0.015794426506964165,
+        "mape": 0.04756643006992561,
+        "mape_zero_actuals_excluded": 0
+      },
+      "ml_weather_adapter": {
+        "n": 4900,
+        "mae": 13.940763659065183,
+        "rmse": 24.129716207934024,
+        "wape": 0.04091981694103558,
+        "bias": -0.01221655773747576,
+        "mape": 0.040754264480355004,
+        "mape_zero_actuals_excluded": 0
+      },
+      "naive_last": {
+        "n": 4900,
+        "mae": 28.08612244897959,
+        "rmse": 48.98974486605147,
+        "wape": 0.08244017453437134,
+        "bias": -0.012703102274170399,
+        "mape": 0.08218828742022004,
+        "mape_zero_actuals_excluded": 0
+      },
+      "seasonal_naive_7": {
+        "n": 4900,
+        "mae": 21.261020408163265,
+        "rmse": 40.397830311509935,
+        "wape": 0.062406700547995755,
+        "bias": -0.014969245625259081,
+        "mape": 0.0545187927397575,
+        "mape_zero_actuals_excluded": 0
+      },
+      "trailing_mean_28": {
+        "n": 4900,
+        "mae": 25.72331632653061,
+        "rmse": 47.797671755970974,
+        "wape": 0.07550471559092249,
+        "bias": -0.038521891076558866,
+        "mape": 0.06678460107730524,
+        "mape_zero_actuals_excluded": 0
+      }
+    },
+    "h08_14": {
+      "statistical_ewma (existing)": {
+        "n": 4900,
+        "mae": 14.5365803936366,
+        "rmse": 25.549882051612997,
+        "wape": 0.04212900966429473,
+        "bias": -0.01361300681054422,
+        "mape": 0.04055237870873954,
+        "mape_zero_actuals_excluded": 0
+      },
+      "ml_plain": {
+        "n": 4900,
+        "mae": 24.700449735372636,
+        "rmse": 48.362126703012926,
+        "wape": 0.0715853011805628,
+        "bias": -0.025708896128919124,
+        "mape": 0.058057450647182575,
+        "mape_zero_actuals_excluded": 0
+      },
+      "ml_weather_adapter": {
+        "n": 4900,
+        "mae": 15.851336170191495,
+        "rmse": 28.267695330242464,
+        "wape": 0.04593935276540779,
+        "bias": -0.021326062973075235,
+        "mape": 0.04389088784066054,
+        "mape_zero_actuals_excluded": 0
+      },
+      "naive_last": {
+        "n": 4900,
+        "mae": 33.00632653061224,
+        "rmse": 59.448724261556116,
+        "wape": 0.09565687470759862,
+        "bias": -0.025190729981706246,
+        "mape": 0.08830372628061828,
+        "mape_zero_actuals_excluded": 0
+      },
+      "seasonal_naive_7": {
+        "n": 4900,
+        "mae": 24.035918367346937,
+        "rmse": 46.418385695888276,
+        "wape": 0.06965939786164764,
+        "bias": -0.027428210471030157,
+        "mape": 0.05907976850010968,
+        "mape_zero_actuals_excluded": 0
+      },
+      "trailing_mean_28": {
+        "n": 4900,
+        "mae": 27.972602040816327,
+        "rmse": 52.455490277729446,
+        "wape": 0.08106844868610863,
+        "bias": -0.05068295498837492,
+        "mape": 0.07089004309058389,
+        "mape_zero_actuals_excluded": 0
+      }
+    },
+    "h15_30": {
+      "statistical_ewma (existing)": {
+        "n": 11200,
+        "mae": 17.801072235614903,
+        "rmse": 31.71331127379734,
+        "wape": 0.051582719753156495,
+        "bias": -0.020969616362352964,
+        "mape": 0.049863914050813085,
+        "mape_zero_actuals_excluded": 0
+      },
+      "ml_plain": {
+        "n": 11200,
+        "mae": 31.77743692067615,
+        "rmse": 63.9817345974514,
+        "wape": 0.09208246567717074,
+        "bias": -0.02192177164113806,
+        "mape": 0.07213518655365522,
+        "mape_zero_actuals_excluded": 0
+      },
+      "ml_weather_adapter": {
+        "n": 11200,
+        "mae": 18.63272357888963,
+        "rmse": 33.68812772147424,
+        "wape": 0.05399262167393226,
+        "bias": -0.03756670261350477,
+        "mape": 0.05095125787071225,
+        "mape_zero_actuals_excluded": 0
+      },
+      "naive_last": {
+        "n": 11200,
+        "mae": 35.534375,
+        "rmse": 66.0711473932241,
+        "wape": 0.10296906180523988,
+        "bias": -0.02532746301317976,
+        "mape": 0.09271828997324198,
+        "mape_zero_actuals_excluded": 0
+      },
+      "seasonal_naive_7": {
+        "n": 11200,
+        "mae": 28.11660714285714,
+        "rmse": 55.68885019206525,
+        "wape": 0.08147436555860363,
+        "bias": -0.02814317792611976,
+        "mape": 0.06789617780780306,
+        "mape_zero_actuals_excluded": 0
+      },
+      "trailing_mean_28": {
+        "n": 11200,
+        "mae": 28.95981505102041,
+        "rmse": 54.20438249807007,
+        "wape": 0.08391775529629651,
+        "bias": -0.05081611231605553,
+        "mape": 0.07393627066129269,
+        "mape_zero_actuals_excluded": 0
+      }
+    }
+  },
+  "per_series_wape": {
+    "Base_01/Clothing": {
+      "statistical_ewma (existing)": 0.04304945002552525,
+      "ml_plain": 0.060203397398004156,
+      "ml_weather_adapter": 0.0471696345971717
+    },
+    "Base_01/Comms": {
+      "statistical_ewma (existing)": 0.039469748326693886,
+      "ml_plain": 0.04393394178265842,
+      "ml_weather_adapter": 0.04282814198592605
+    },
+    "Base_01/Engineering": {
+      "statistical_ewma (existing)": 0.04428401827475034,
+      "ml_plain": 0.04741620048784946,
+      "ml_weather_adapter": 0.046382803110608044
+    },
+    "Base_01/Food": {
+      "statistical_ewma (existing)": 0.05074527478696213,
+      "ml_plain": 0.04573585276394873,
+      "ml_weather_adapter": 0.054723299371637904
+    },
+    "Base_01/Fuel": {
+      "statistical_ewma (existing)": 0.04892983559751776,
+      "ml_plain": 0.08674872220768731,
+      "ml_weather_adapter": 0.05004444733559901
+    },
+    "Base_01/Maintenance": {
+      "statistical_ewma (existing)": 0.04191248053031641,
+      "ml_plain": 0.04609434886157659,
+      "ml_weather_adapter": 0.04258863871323625
+    },
+    "Base_01/Medical": {
+      "statistical_ewma (existing)": 0.04639248321853461,
+      "ml_plain": 0.053563071727684,
+      "ml_weather_adapter": 0.052577973213214564
+    },
+    "Base_01/Shelter": {
+      "statistical_ewma (existing)": 0.042092693251160204,
+      "ml_plain": 0.0716837051151871,
+      "ml_weather_adapter": 0.04359696492406217
+    },
+    "Base_01/Spares": {
+      "statistical_ewma (existing)": 0.046135339532452295,
+      "ml_plain": 0.047849915733922846,
+      "ml_weather_adapter": 0.046104726899954915
+    },
+    "Base_01/Water": {
+      "statistical_ewma (existing)": 0.046102474328517475,
+      "ml_plain": 0.10968013441403442,
+      "ml_weather_adapter": 0.054023858538486735
+    },
+    "Base_02/Clothing": {
+      "statistical_ewma (existing)": 0.037927099058191666,
+      "ml_plain": 0.07388554190395957,
+      "ml_weather_adapter": 0.0418718714483559
+    },
+    "Base_02/Comms": {
+      "statistical_ewma (existing)": 0.04731096387130725,
+      "ml_plain": 0.057493389524301296,
+      "ml_weather_adapter": 0.054694775944644
+    },
+    "Base_02/Engineering": {
+      "statistical_ewma (existing)": 0.04566707623612912,
+      "ml_plain": 0.05289799240058025,
+      "ml_weather_adapter": 0.053820232396442076
+    },
+    "Base_02/Food": {
+      "statistical_ewma (existing)": 0.047139703765441986,
+      "ml_plain": 0.05755521919535285,
+      "ml_weather_adapter": 0.049368051972206194
+    },
+    "Base_02/Fuel": {
+      "statistical_ewma (existing)": 0.0496624952900433,
+      "ml_plain": 0.09232726897309505,
+      "ml_weather_adapter": 0.05129895377921104
+    },
+    "Base_02/Maintenance": {
+      "statistical_ewma (existing)": 0.0407136833358554,
+      "ml_plain": 0.046614823726505945,
+      "ml_weather_adapter": 0.045464138590767006
+    },
+    "Base_02/Medical": {
+      "statistical_ewma (existing)": 0.04471143462590462,
+      "ml_plain": 0.05184001171160459,
+      "ml_weather_adapter": 0.04780194043078688
+    },
+    "Base_02/Shelter": {
+      "statistical_ewma (existing)": 0.040522159166531575,
+      "ml_plain": 0.06993353602929839,
+      "ml_weather_adapter": 0.03953696987125255
+    },
+    "Base_02/Spares": {
+      "statistical_ewma (existing)": 0.048757809255618664,
+      "ml_plain": 0.04775786331282094,
+      "ml_weather_adapter": 0.04618799207474405
+    },
+    "Base_02/Water": {
+      "statistical_ewma (existing)": 0.04784586750660382,
+      "ml_plain": 0.11930468692203722,
+      "ml_weather_adapter": 0.05523713650797281
+    },
+    "Base_03/Clothing": {
+      "statistical_ewma (existing)": 0.04496131878289664,
+      "ml_plain": 0.06396354922285044,
+      "ml_weather_adapter": 0.05146117517861614
+    },
+    "Base_03/Comms": {
+      "statistical_ewma (existing)": 0.04458626219442327,
+      "ml_plain": 0.04648064475940046,
+      "ml_weather_adapter": 0.04801761412477896
+    },
+    "Base_03/Engineering": {
+      "statistical_ewma (existing)": 0.03940766212195231,
+      "ml_plain": 0.04312291908282655,
+      "ml_weather_adapter": 0.04277286862238484
+    },
+    "Base_03/Food": {
+      "statistical_ewma (existing)": 0.049167974136199784,
+      "ml_plain": 0.06214633817074723,
+      "ml_weather_adapter": 0.04993680099375455
+    },
+    "Base_03/Fuel": {
+      "statistical_ewma (existing)": 0.045211740051209634,
+      "ml_plain": 0.09707646539772836,
+      "ml_weather_adapter": 0.04788606086866155
+    },
+    "Base_03/Maintenance": {
+      "statistical_ewma (existing)": 0.040794184205627276,
+      "ml_plain": 0.045814009617533714,
+      "ml_weather_adapter": 0.04155873320290386
+    },
+    "Base_03/Medical": {
+      "statistical_ewma (existing)": 0.04676801991214902,
+      "ml_plain": 0.05141992735629219,
+      "ml_weather_adapter": 0.049849128606515185
+    },
+    "Base_03/Shelter": {
+      "statistical_ewma (existing)": 0.0468713018594175,
+      "ml_plain": 0.07478229527468624,
+      "ml_weather_adapter": 0.04403835123344535
+    },
+    "Base_03/Spares": {
+      "statistical_ewma (existing)": 0.055246704653396435,
+      "ml_plain": 0.05167650472467564,
+      "ml_weather_adapter": 0.05353119434189277
+    },
+    "Base_03/Water": {
+      "statistical_ewma (existing)": 0.05735311441376865,
+      "ml_plain": 0.11501889803831898,
+      "ml_weather_adapter": 0.05118274566322177
+    },
+    "Base_04/Clothing": {
+      "statistical_ewma (existing)": 0.04114732071656462,
+      "ml_plain": 0.0666581316878798,
+      "ml_weather_adapter": 0.0477512403727881
+    },
+    "Base_04/Comms": {
+      "statistical_ewma (existing)": 0.04299255414094006,
+      "ml_plain": 0.04900483179164009,
+      "ml_weather_adapter": 0.04964372664924804
+    },
+    "Base_04/Engineering": {
+      "statistical_ewma (existing)": 0.05038022083894517,
+      "ml_plain": 0.04631111559941869,
+      "ml_weather_adapter": 0.044685173494360464
+    },
+    "Base_04/Food": {
+      "statistical_ewma (existing)": 0.04689666184575247,
+      "ml_plain": 0.058885761018825186,
+      "ml_weather_adapter": 0.051914395929633914
+    },
+    "Base_04/Fuel": {
+      "statistical_ewma (existing)": 0.04812599888340998,
+      "ml_plain": 0.07616968688487526,
+      "ml_weather_adapter": 0.051155831272795625
+    },
+    "Base_04/Maintenance": {
+      "statistical_ewma (existing)": 0.04418515377402413,
+      "ml_plain": 0.04926205854715434,
+      "ml_weather_adapter": 0.04775453362684847
+    },
+    "Base_04/Medical": {
+      "statistical_ewma (existing)": 0.04897098106148008,
+      "ml_plain": 0.05981580894092265,
+      "ml_weather_adapter": 0.05322927671380434
+    },
+    "Base_04/Shelter": {
+      "statistical_ewma (existing)": 0.040234698365858544,
+      "ml_plain": 0.07524026156422664,
+      "ml_weather_adapter": 0.04393789145626277
+    },
+    "Base_04/Spares": {
+      "statistical_ewma (existing)": 0.037599666160993306,
+      "ml_plain": 0.04979526788467353,
+      "ml_weather_adapter": 0.045163006340207264
+    },
+    "Base_04/Water": {
+      "statistical_ewma (existing)": 0.04065565016148298,
+      "ml_plain": 0.09202060739920878,
+      "ml_weather_adapter": 0.04245862936345589
+    },
+    "Base_05/Clothing": {
+      "statistical_ewma (existing)": 0.04097315241232963,
+      "ml_plain": 0.06667271122219366,
+      "ml_weather_adapter": 0.04506309557053485
+    },
+    "Base_05/Comms": {
+      "statistical_ewma (existing)": 0.041217046070020726,
+      "ml_plain": 0.04726597461329988,
+      "ml_weather_adapter": 0.04693396946617677
+    },
+    "Base_05/Engineering": {
+      "statistical_ewma (existing)": 0.04341524063485179,
+      "ml_plain": 0.04745298118181492,
+      "ml_weather_adapter": 0.04961434228199804
+    },
+    "Base_05/Food": {
+      "statistical_ewma (existing)": 0.046372712858923686,
+      "ml_plain": 0.052536841022889025,
+      "ml_weather_adapter": 0.0504531508031375
+    },
+    "Base_05/Fuel": {
+      "statistical_ewma (existing)": 0.04388423279904338,
+      "ml_plain": 0.08719596579551156,
+      "ml_weather_adapter": 0.04222885640557571
+    },
+    "Base_05/Maintenance": {
+      "statistical_ewma (existing)": 0.04098354952067298,
+      "ml_plain": 0.04324183336881036,
+      "ml_weather_adapter": 0.04158896612523007
+    },
+    "Base_05/Medical": {
+      "statistical_ewma (existing)": 0.05418339862607261,
+      "ml_plain": 0.062485217074713814,
+      "ml_weather_adapter": 0.0534118186988976
+    },
+    "Base_05/Shelter": {
+      "statistical_ewma (existing)": 0.04772406772696163,
+      "ml_plain": 0.07073607291626544,
+      "ml_weather_adapter": 0.04588114972423856
+    },
+    "Base_05/Spares": {
+      "statistical_ewma (existing)": 0.04675550860463667,
+      "ml_plain": 0.050432769477153604,
+      "ml_weather_adapter": 0.04614462990411034
+    },
+    "Base_05/Water": {
+      "statistical_ewma (existing)": 0.042983297274790125,
+      "ml_plain": 0.0967190257133853,
+      "ml_weather_adapter": 0.05375199035039107
+    }
+  },
+  "best_trained_variant": "ml_weather_adapter",
+  "rel_wape_improvement_h1_14_95ci_vs": {
+    "statistical_ewma (existing)": [
+      -0.10969606144238672,
+      -0.06235430428130433
+    ],
+    "ml_plain": [
+      0.2764045050708545,
+      0.344215295702727
+    ],
+    "naive_last": [
+      0.48903553250797815,
+      0.5332624549988435
+    ],
+    "seasonal_naive_7": [
+      0.3125971352511227,
+      0.3677558681740933
+    ],
+    "trailing_mean_28": [
+      0.42287601046309553,
+      0.4657983385667276
+    ]
+  },
+  "interval_coverage": {
+    "ml_plain": {
+      "nominal": 0.8,
+      "series_level": 0.9562857142857143,
+      "by_location_aggregate": 0.590952380952381,
+      "by_supply_aggregate": 0.7666666666666667,
+      "all_series_aggregate": 0.2833333333333333
+    },
+    "ml_weather_adapter": {
+      "nominal": 0.8,
+      "series_level": 0.9987142857142857,
+      "by_location_aggregate": 0.9085714285714286,
+      "by_supply_aggregate": 0.9457142857142857,
+      "all_series_aggregate": 0.5761904761904761
+    }
+  },
+  "promotion": {
+    "status": "not_promoted",
+    "adapter": "weather",
+    "best_variant": "ml_weather_adapter",
+    "reason": "scenario holdout h1-14: ml_weather_adapter WAPE 4.34% vs statistical 4.00% (relative improvement -8.5%, 95% CI -11.0..-6.2%); need >= +2% with CI above 0; series-level interval coverage 99.9% outside 70-90%",
+    "criteria": {
+      "scenario_holdout_improvement_ge_2pct_ci_gt0": false,
+      "benchmark_beats_best_baseline_ci_gt0": true,
+      "interval_coverage_70_90": false
+    },
+    "decided_utc": "2026-10-11T09:50:11+00:00"
+  }
+}

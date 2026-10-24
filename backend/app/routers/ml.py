@@ -1,10 +1,11 @@
 """Model registry, evaluation reports and benchmark-format shortage scoring."""
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
+from .. import auth
 from ..ml.features import InputError
 from ..ml.shortage import WINDOW
 from ..services import model_service as ms
@@ -46,7 +47,7 @@ class ShortageRequest(BaseModel):
 
 
 @router.post("/shortage-risk")
-def shortage_risk(req: ShortageRequest):
+def shortage_risk(req: ShortageRequest, _: auth.Principal = Depends(auth.viewer)):
     """7-day shortage-onset probability for a benchmark-format record. The application's own inventory status is not driven by this model."""
     model, err = ms.shortage_model()
     if model is None:

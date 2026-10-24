@@ -68,10 +68,14 @@ function ThemeToggle() {
 function Shell() {
   const { tab, go, scenario, scenarioActive, resetScenario, refreshKey } = useApp()
   const { user, logout, can } = useAuth()
+  const [loginOpen, setLoginOpen] = useState(false)
   const [outErr, setOutErr] = useState<string | null>(null)
   const [health, setHealth] = useState<Health | null>(null)
   const [hErr, setHErr] = useState<ApiError | null>(null)
   const [crit, setCrit] = useState<number | null>(null)
+
+  useEffect(() => { if (user) setLoginOpen(false) }, [user])
+
   useEffect(() => {
     let alive = true
     const poll = () => get<Health>('/api/health').then(h => { if (alive) { setHealth(h); setHErr(null) } }).catch(e => { if (alive) { setHErr(e); setHealth(null) } })
@@ -122,13 +126,25 @@ function Shell() {
         </div>
         <div>
           <ThemeToggle />
-          <div className="mt-4 mx-1.5 text-[12px] border-t border-ln pt-3 bento-card p-2.5" data-testid="user-box">
-            <div className="text-mu text-[10px] tracking-[.14em] font-mono uppercase font-semibold">SIGNED IN</div>
-            <div className="text-tx font-bold break-all mt-0.5" data-testid="user-name">{user?.username}</div>
-            <div className="text-mu text-[11px] font-mono uppercase mb-2" data-testid="user-role">{user?.role}</div>
-            <Btn onClick={() => { setOutErr(null); logout().catch(() => setOutErr('Sign-out failed. Try again.')) }}>SIGN OUT</Btn>
-            {outErr && <div role="alert" className="text-cr mt-1 text-[11.5px]">{outErr}</div>}
-          </div>
+          {user ? (
+            <div className="mt-4 mx-1.5 text-[12px] border-t border-ln pt-3 bento-card p-2.5" data-testid="user-box">
+              <div className="text-mu text-[10px] tracking-[.14em] font-mono uppercase font-semibold">SIGNED IN</div>
+              <div className="text-tx font-bold break-all mt-0.5" data-testid="user-name">{user.username}</div>
+              <div className="text-mu text-[11px] font-mono uppercase mb-2" data-testid="user-role">{user.role}</div>
+              <Btn onClick={() => { setOutErr(null); logout().catch(() => setOutErr('Sign-out failed. Try again.')) }}>SIGN OUT</Btn>
+              {outErr && <div role="alert" className="text-cr mt-1 text-[11.5px]">{outErr}</div>}
+            </div>
+          ) : (
+            <div className="mt-4 mx-1.5 text-[12px] border-t border-ln pt-3 bento-card p-2.5" data-testid="evaluator-box">
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="w-2 h-2 rounded-full bg-ac animate-pulse" />
+                <div className="text-mu text-[10px] tracking-[.14em] font-mono uppercase font-semibold">EVALUATOR MODE</div>
+              </div>
+              <div className="text-tx font-bold text-[11px] mb-0.5" data-testid="evaluator-indicator">READ ONLY</div>
+              <div className="text-mu text-[10.5px] leading-tight mb-2.5">Decision support view. Authorized operators and admins may sign in below.</div>
+              <Btn primary onClick={() => setLoginOpen(true)} className="w-full justify-center text-[11px]" data-testid="sign-in-btn">SIGN IN</Btn>
+            </div>
+          )}
         </div>
       </aside>
       <main id="main" tabIndex={-1} className="min-w-0 flex flex-col outline-none">
@@ -170,13 +186,11 @@ function Shell() {
         </div>
       </main>
     </div>
+    {loginOpen && <Login onClose={() => setLoginOpen(false)} onSuccess={() => setLoginOpen(false)} />}
     </>
   )
 }
 function Gate() {
-  const { user, checking } = useAuth()
-  if (checking) return <div role="status" className="min-h-screen grid place-items-center text-mu font-mono text-[12px]">Checking session…</div>
-  if (!user) return <Login />
   return <AppProvider><Shell /></AppProvider>
 }
 export default function App() { return <ThemeProvider><AuthProvider><Gate /></AuthProvider></ThemeProvider> }

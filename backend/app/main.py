@@ -200,15 +200,15 @@ def health(db: Session = Depends(get_db), user: auth.Principal | None = Depends(
 
 
 @app.get("/api/health/detail", tags=["health"])
-def health_detail(db: Session = Depends(get_db), p: auth.Principal = Depends(auth.viewer)):
-    """Operational detail for signed-in users: active model and version, last model load, forecast generation time, data coverage, fallbacks, counters."""
+def health_detail(db: Session = Depends(get_db), p: auth.Principal | None = Depends(auth.optional_principal)):
+    """Operational detail for signed-in users and public evaluators: active model and version, last model load, forecast generation time, data coverage, fallbacks, counters."""
     ok, err = _db_check(db)
     models = _model_component()
     out = {"environment": config.APP_ENV, "api_version": app.version, "database": {"connected": ok, "schema_version": None},
            "startup": {"complete": bootstrap.is_ready(), "attempts": bootstrap._state["attempts"], "last_error": bootstrap._state["last_error"],
                        "last_success_at": None if not bootstrap._state["last_success_at"] else ms._iso(bootstrap._state["last_success_at"])},
            "models": ms.registry_status(), "model_state": models["_detail"], "operational": metrics.snapshot()}
-    if p.can("admin"):
+    if p is not None and p.can("admin"):
         out["database"]["target"] = config.database_target(config.DATABASE_URL)       # host and database name: administrators only
     if ok:
         try:
@@ -220,6 +220,7 @@ def health_detail(db: Session = Depends(get_db), p: auth.Principal = Depends(aut
     return out
 
 
-for r in (gis.router, inventory.router, forecast.router, decision.router, iot.router, simulation.router, ml.router, auth.users_router):
-    app.include_router(r, dependencies=[Depends(auth.viewer)])
+for r in (gis.router, inventory.router, forecast.router, decision.router, iot.router, simulation.router, ml.router):
+    app.include_router(r)
+app.include_router(auth.users_router, dependencies=[Depends(auth.admin)])
 app.include_router(auth.router)

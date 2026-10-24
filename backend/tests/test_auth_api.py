@@ -30,29 +30,58 @@ def fresh_limiters():
     auth.configure_limiters(config.settings.login_max_failures, config.settings.login_window_seconds)
 
 
-# ------------------------------------------------------------------------------------------------------- required authentication
-READ_ENDPOINTS = ["/api/dashboard", "/api/locations", "/api/locations/Base_04", "/api/inventory", "/api/inventory/projection?location=Base_04&supply=Medical",
-                  "/api/inventory/risk-basis", "/api/alerts", "/api/forecast", "/api/forecast/challenger", "/api/vehicles", "/api/routes", "/api/routes/compare?destination=Base_04",
-                  "/api/priority", "/api/priority/weights", "/api/allocation", "/api/insights", "/api/iot/events", "/api/iot/feed", "/api/simulation/runs",
-                  "/api/ml/models", "/api/ml/evaluation", "/api/health/detail", "/api/auth/me"]
-WRITE_ENDPOINTS = [("post", "/api/iot/update", IOT), ("post", "/api/iot/simulate", {"count": 1}), ("post", "/api/iot/reset", None),
-                   ("post", "/api/forecast/recompute", None), ("post", "/api/simulation/run", {}), ("post", "/api/auth/logout", None),
-                   ("post", "/api/ml/shortage-risk", {"demand": [1] * 28, "on_hand": [1] * 28, "in_transit": [1] * 28, "backlog": [0] * 28, "new_backlog": [0] * 28}),
-                   ("get", "/api/users", None), ("post", "/api/users", {"username": "x_user", "password": "Aa1-long-enough-pw"}),
-                   ("patch", "/api/users/1", {"role": "viewer"}), ("get", "/api/audit-log", None)]
+# ------------------------------------------------------------------------------------------------------- evaluator & auth matrix
+PUBLIC_EVALUATOR_ENDPOINTS = [
+    "/api/dashboard", "/api/locations", "/api/locations/Base_04", "/api/inventory",
+    "/api/inventory/projection?location=Base_04&supply=Medical",
+    "/api/inventory/risk-basis", "/api/alerts", "/api/forecast", "/api/forecast/challenger",
+    "/api/vehicles", "/api/routes", "/api/routes/compare?destination=Base_04",
+    "/api/priority", "/api/priority/weights", "/api/allocation", "/api/insights",
+    "/api/iot/events", "/api/iot/feed", "/api/simulation/runs",
+    "/api/ml/models", "/api/ml/evaluation", "/api/health/detail",
+]
+
+PROTECTED_ENDPOINTS = [
+    ("get", "/api/auth/me", None),
+    ("post", "/api/auth/logout", None),
+    ("post", "/api/auth/change-password", {"current_password": "x", "new_password": "y"}),
+    ("post", "/api/iot/update", IOT),
+    ("post", "/api/iot/simulate", {"count": 1}),
+    ("post", "/api/iot/reset", None),
+    ("post", "/api/forecast/recompute", None),
+    ("post", "/api/simulation/run", {"demand_increase": 0.1}),
+    ("post", "/api/ml/shortage-risk", {"demand": [1] * 28, "on_hand": [1] * 28, "in_transit": [1] * 28, "backlog": [0] * 28, "new_backlog": [0] * 28}),
+    ("get", "/api/users", None),
+    ("post", "/api/users", {"username": "x_user", "password": "Aa1-long-enough-pw"}),
+    ("patch", "/api/users/1", {"role": "viewer"}),
+    ("get", "/api/audit-log", None),
+]
 
 
-@pytest.mark.parametrize("url", READ_ENDPOINTS)
-def test_every_read_endpoint_requires_authentication(anon_client, url):
+@pytest.mark.parametrize("url", PUBLIC_EVALUATOR_ENDPOINTS)
+def test_every_evaluator_read_endpoint_allows_anonymous_access(anon_client, url):
     r = anon_client.get(url)
-    assert r.status_code == 401 and r.json()["code"] == "AUTH_REQUIRED", url
+    assert r.status_code == 200, (url, r.status_code, r.text[:100])
+
+
+@pytest.mark.parametrize("method,url,body", PROTECTED_ENDPOINTS)
+def test_every_protected_endpoint_rejects_anonymous_access(anon_client, method, url, body):
+    r = getattr(anon_client, method)(url, **({"json": body} if body is not None else {}))
+    assert r.status_code == 401, (url, r.status_code)
+    assert r.json().get("code") == "AUTH_REQUIRED", (url, r.json())
     assert r.headers.get("www-authenticate") == "Bearer"
 
 
-@pytest.mark.parametrize("method,url,body", WRITE_ENDPOINTS)
-def test_every_write_endpoint_requires_authentication(anon_client, method, url, body):
-    r = getattr(anon_client, method)(url, **({"json": body} if body is not None else {}))
-    assert r.status_code == 401, (url, r.status_code)
+def test_health_detail_redacts_target_for_evaluator_and_viewer(anon_client, viewer_client, client):
+    anon_hd = anon_client.get("/api/health/detail").json()
+    assert "target" not in anon_hd["database"], "Database target host string leaked to anonymous evaluator"
+    assert anon_hd["environment"] == "test"
+
+    v_hd = viewer_client.get("/api/health/detail").json()
+    assert "target" not in v_hd["database"], "Database target host string leaked to viewer"
+
+    a_hd = client.get("/api/health/detail").json()
+    assert "target" in a_hd["database"], "Database target missing for administrator"
 
 
 def test_session_probe_is_always_200_and_reports_state(app, anon_client):
@@ -62,7 +91,7 @@ def test_session_probe_is_always_200_and_reports_state(app, anon_client):
     assert j["authenticated"] is True and j["user"]["username"] == "t_viewer" and j["csrf_token"] == r.json()["csrf_token"]
 
 
-def test_public_endpoints_are_only_health_login_and_docs_in_development(anon_client):
+def test_public_health_endpoints(anon_client):
     assert anon_client.get("/api/health/live").status_code == 200
     assert anon_client.get("/api/health/ready").status_code == 200
     h = anon_client.get("/api/health")

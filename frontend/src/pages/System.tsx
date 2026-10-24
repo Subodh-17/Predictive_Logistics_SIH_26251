@@ -90,8 +90,17 @@ export default function System() {
             <Note>Failures, fallbacks and rejected requests are counted here and written to the structured server log.</Note>
           </Card>
         </GridHalf></>)}</Async>
-      <Card title="SIGNED IN AS" className="mb-3"><KV rows={[['User', user?.username ?? ''], ['Role', user?.role ?? '']]} /></Card>
-      <ChangePassword />
+      {user ? (
+        <>
+          <Card title="SIGNED IN AS" className="mb-3"><KV rows={[['User', user.username], ['Role', user.role]]} /></Card>
+          <ChangePassword />
+        </>
+      ) : (
+        <Card title="CURRENT SESSION" className="mb-3">
+          <KV rows={[['Session Mode', 'Public Evaluator (Read-Only)'], ['Access', 'Command Centre & Model Insights View']]} />
+          <Note>You are viewing this system in public evaluator mode. Password management and account modifications require signing in with an authorized administrator or operator account.</Note>
+        </Card>
+      )}
     </div>
   )
 }

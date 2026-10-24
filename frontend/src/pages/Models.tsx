@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ApiError, post, useApi } from '../api'
+import { useAuth } from '../auth'
 import { Btn, ErrorBox } from '../components/ui'
 import { Async, Card, KV, Note, PageHeader, Table, Tag } from '../components/ui'
 import type { ModelsStatus } from '../components/ModelRoles'
@@ -29,6 +30,7 @@ const parseSeries = (t: string) => t.split(/[\s,;]+/).filter(Boolean).map(Number
 
 /** Scores ONE record supplied by the user in the benchmark's format. It does not read the application's inventory and does not change any status. */
 function ShortageCheck() {
+  const { user } = useAuth()
   const [txt, setTxt] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<ApiError | null>(null)
@@ -47,7 +49,12 @@ function ShortageCheck() {
       <div className="grid gap-2 md:grid-cols-2" data-testid="shortage-form">
         {SERIES.map(([k, label]) => <label key={k} className="text-[11px] text-mu">{label.toUpperCase()}<textarea rows={2} className="w-full mt-1 font-mono text-[12px]" value={txt[k] ?? ''} onChange={e => setTxt({ ...txt, [k]: e.target.value })} spellCheck={false} /></label>)}
       </div>
-      <div className="mt-2"><Btn primary disabled={busy || SERIES.some(([k]) => !(txt[k] ?? '').trim())} onClick={() => void run()}>{busy ? 'SCORING…' : 'SCORE RECORD'}</Btn></div>
+      <div className="mt-2 flex items-center gap-3 flex-wrap">
+        <Btn primary disabled={busy || !user || SERIES.some(([k]) => !(txt[k] ?? '').trim())} onClick={() => void run()}>
+          {busy ? 'SCORING…' : 'SCORE RECORD'}
+        </Btn>
+        {!user && <span className="text-mu text-[11px] font-mono">Sign-in required to score custom records. Evaluator model reports are available below.</span>}
+      </div>
       {err && <div className="mt-2"><ErrorBox error={err} /></div>}
       {res && (res.applicable
         ? <div role="status" className="mt-2.5 border-l-[3px] border-ac pl-3 bg-ins/90 py-2 text-[12.5px] rounded-r-sm" data-testid="shortage-result">Shortage-onset probability within {res.horizon_days} days: <b className="text-act">{((res.probability ?? 0) * 100).toFixed(1)}%</b> · decision threshold {((res.threshold ?? 0) * 100).toFixed(1)}% → <Tag tone={res.flag ? 'cr' : 'ok'}>{res.flag ? 'ABOVE THRESHOLD' : 'BELOW THRESHOLD'}</Tag> <span className="text-mu block sm:inline mt-1 sm:mt-0">({res.model}; probabilities are calibrated on the benchmark, not on real operations)</span></div>

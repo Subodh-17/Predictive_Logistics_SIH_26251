@@ -8,10 +8,10 @@ import { Card, LevelTag, StatusTag, Tag } from './ui'
 const TT = { cr: 'text-cr', wr: 'text-wr', ok: 'text-ok', '': '' }
 function Fact({ label, value, sub, t = '' }: { label: string; value: React.ReactNode; sub?: React.ReactNode; t?: 'cr' | 'wr' | 'ok' | '' }) {
   return (
-    <div className="bg-ins border border-ln px-3 py-2 min-w-0">
-      <span className="block font-mono text-[10px] tracking-[.1em] text-mu">{label}</span>
-      <span className={`block text-[17px] font-semibold tabular-nums mt-0.5 ${TT[t]}`}>{value}</span>
-      {sub && <span className="block text-[11px] text-mu mt-0.5">{sub}</span>}
+    <div className="bg-ins/90 border border-ln/70 px-3 py-2.5 min-w-0 rounded-sm">
+      <span className="block font-mono text-[10px] tracking-[.12em] text-mu uppercase">{label}</span>
+      <span className={`block text-[18px] font-bold tabular-nums mt-0.5 ${TT[t]}`}>{value}</span>
+      {sub && <span className="block text-[11px] text-soft mt-0.5 leading-snug">{sub}</span>}
     </div>
   )
 }
@@ -42,8 +42,8 @@ export default function WhyRecommendation({ prio, inv, alloc, routes, vehicles }
         </select>
         <StatusTag s={p.status} /><span className="font-mono text-mu text-[11px]">priority score {p.score} / 100</span>
       </div>
-      <div data-testid="why-recommendation" className="border border-ac bg-ins px-3 py-2 mb-3 text-[13px]">
-        <b className="font-mono text-[11px] tracking-[.12em] text-act">RECOMMENDATION · DECISION SUPPORT</b>
+      <div data-testid="why-recommendation" className="border border-ac bg-ins/90 px-3.5 py-2.5 mb-3 text-[13px] rounded-sm shadow-xs">
+        <b className="font-mono text-[11px] tracking-[.12em] text-act uppercase">RECOMMENDATION · DECISION SUPPORT</b>
         <div className="mt-0.5">
           {row && row.legs.length
             ? <>Source depot → destination: <b>{corridorText(row.legs, p.location)}</b> — {fx(row.allocated)} of {fx(row.need)} units of {p.supply}.</>
@@ -55,7 +55,7 @@ export default function WhyRecommendation({ prio, inv, alloc, routes, vehicles }
         <Fact label="STOCK-OUT HORIZON" t={tone(p.status)} value={`${p.days_cover.toFixed(1)} days`} sub={`stock-out ${dd(p.stockout_date)} · ${margin >= 0 ? margin.toFixed(1) + ' d after' : Math.abs(margin).toFixed(1) + ' d before'} the replenishment lead time`} />
         <Fact label="PREDICTED SHORTAGE" t={item && item.shortage_14d > 0 ? 'cr' : 'ok'} value={item ? `${fx(item.shortage_14d)} units / 14 d` : '—'} sub={item ? `stock ${fx(item.stock)} vs safety ${fx(item.safety_stock)}${item.below_safety ? ' — below safety stock' : ''}` : undefined} />
         <Fact label="LEAD TIME" value={`${lead.toFixed(1)} days`} sub="1 d handling + ETA of the fastest route" />
-        <Fact label="SUPPLY CRITICALITY" value={`${Math.round(crit * 100)} / 100`} sub={`${criticalityLabel(crit)} · fixed prototype weight for ${p.supply}`} />
+        <Fact label="SUPPLY CRITICALITY" value={`${Math.round(crit * 100)} / 100`} sub={`${criticalityLabel(crit)} · fixed configured weight for ${p.supply}`} />
         <Fact label="ROUTE RISK" t={route ? (route.risk < 0.3 ? 'ok' : route.risk < 0.5 ? 'wr' : 'cr') : 'cr'} value={route ? <>{route.id}{otherRoutes.length ? ` (+${otherRoutes.join(', ')})` : ''} · <LevelTag level={route.risk_level} /></> : 'No feasible route'}
           sub={route ? `main route ${route.depot} → ${route.destination} · ETA ${route.eta_h.toFixed(1)} h · ${route.terrain.type} (terrain risk ${Math.round(route.terrain.risk * 100)}) · risk ${Math.round(route.risk * 100)}/100` : 'no available vehicle serves this location'} />
         <Fact label="VEHICLE / DISPATCH" t={row && row.unmet > 0 ? 'wr' : 'ok'}

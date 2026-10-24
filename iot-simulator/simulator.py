@@ -8,6 +8,7 @@ Generates deterministic RECEIVE / ISSUE / COUNT scans and POSTs them to the Fast
     python iot-simulator/simulator.py --location Base_04 --supply Medical --event RECEIVE --quantity 2000
 """
 import argparse
+import os
 import json
 import random
 import sys
@@ -19,8 +20,24 @@ LOCS = ["Base_01", "Base_02", "Base_03", "Base_04", "Base_05"]
 SUPS = ["Food", "Fuel", "Water", "Medical", "Maintenance", "Engineering", "Clothing", "Comms", "Spares", "Shelter"]
 
 
+_token = os.environ.get("PLSD_TOKEN", "")
+
+
+def _login(api: str) -> str:
+    """Sign in with PLSD_USER / PLSD_PASSWORD (an account with the operator role) and return a bearer token. Credentials are never accepted on the command line."""
+    user, pw = os.environ.get("PLSD_USER", ""), os.environ.get("PLSD_PASSWORD", "")
+    if not user or not pw:
+        raise SystemExit("Authentication required: set PLSD_USER and PLSD_PASSWORD (operator or admin account) or PLSD_TOKEN.")
+    req = urllib.request.Request(api.rstrip("/") + "/api/auth/login", data=json.dumps({"username": user, "password": pw}).encode(), headers={"Content-Type": "application/json"}, method="POST")
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return json.loads(r.read())["access_token"]
+
+
 def post(api: str, body: dict) -> dict:
-    req = urllib.request.Request(api.rstrip("/") + "/api/iot/update", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"}, method="POST")
+    global _token
+    if not _token:
+        _token = _login(api)
+    req = urllib.request.Request(api.rstrip("/") + "/api/iot/update", data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "Authorization": "Bearer " + _token}, method="POST")
     with urllib.request.urlopen(req, timeout=20) as r:
         return json.loads(r.read())
 

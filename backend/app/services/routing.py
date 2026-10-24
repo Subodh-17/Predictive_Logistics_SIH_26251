@@ -3,8 +3,10 @@
 Combined route score (lower is better) = route risk (0..1) + ETA / 24 h + capacity penalty.
 Route risk already contains distance, road condition, weather and terrain; ETA uses terrain/road/weather
 adjusted effective speed; the capacity penalty (0..0.2) grows when the serving depot's available vehicle
-capacity cannot carry the quantity that needs to move. A route is feasible only if its depot has at
-least one available vehicle.
+capacity cannot carry the quantity that needs to move. A route is feasible only if (1) its depot has at
+least one available vehicle and (2) the corridor is not closed (weather risk below CLOSURE_WEATHER_RISK).
+NOT modelled: convoy escort or fuel limits, bridge load limits, time windows, driver hours, enemy action,
+per-vehicle cargo compatibility. A feasible route is therefore "feasible under these constraints", not a guarantee.
 """
 from __future__ import annotations
 
@@ -14,6 +16,9 @@ from .domain import Params, Route, Vehicle, clamp
 from . import terrain as T
 
 CAPACITY_PENALTY_WEIGHT = 0.2
+# Documented assumption (V7): a corridor is treated as CLOSED, hence not feasible, when its weather risk reaches this level. The scenario's
+# speed model otherwise never stops a convoy (effective speed has an 8 km/h floor), which would let a storm-closed road count as usable.
+CLOSURE_WEATHER_RISK = 0.85
 
 
 @dataclass
@@ -64,7 +69,9 @@ def rank_routes(evals: list, vehicles_eff: dict, dest_id: str, required: float =
         if ev.dest_id != dest_id:
             continue
         cap = depot_capacity(vehicles_eff, ev.depot_id)
-        rows.append({"ev": ev, "capacity": cap, "score": score_route(ev, cap, required), "feasible": cap > 0})
+        closed = ev.weather_risk >= CLOSURE_WEATHER_RISK
+        reason = "ROUTE CLOSED" if closed else "NO AVAILABLE VEHICLE" if cap <= 0 else ""
+        rows.append({"ev": ev, "capacity": cap, "score": score_route(ev, cap, required), "feasible": not reason, "blocked_reason": reason})
     rows.sort(key=lambda r: (not r["feasible"], r["score"]))
     return rows
 
@@ -72,7 +79,8 @@ def rank_routes(evals: list, vehicles_eff: dict, dest_id: str, required: float =
 def explain_selection(rows: list, dest_id: str) -> str:
     feas = [r for r in rows if r["feasible"]]
     if not feas:
-        return "No feasible route: no vehicle is available at any serving depot."
+        why = sorted({r["blocked_reason"] for r in rows if r.get("blocked_reason")})
+        return "No feasible route: " + (" and ".join(w.lower() for w in why) if why else "no corridor serves this location") + "."
     ch = feas[0]["ev"]
     if len(feas) == 1:
         tail = " (the other routes have no available vehicle)." if len(rows) > 1 else " (single-corridor location)."

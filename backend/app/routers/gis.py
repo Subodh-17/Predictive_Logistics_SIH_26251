@@ -7,7 +7,7 @@ from ..schemas import LocationOut, VehicleOut
 from ..serializers import insight_dict, item_dict, location_dict, route_dict
 from ..services import routing as rt
 from ..services.explain import why_at_risk
-from .common import Ctx
+from .common import Ctx, IdPath, IdQuery
 
 router = APIRouter(prefix="/api", tags=["gis"])
 
@@ -19,7 +19,7 @@ def locations(c: Ctx = Depends()):
 
 
 @router.get("/locations/{location_id}")
-def location_detail(location_id: str, c: Ctx = Depends()):
+def location_detail(location_id: IdPath, c: Ctx = Depends()):
     loc = next((l for l in c.snap.locations if l.id == location_id), None)
     if loc is None:
         raise HTTPException(404, f"unknown location {location_id}")
@@ -41,7 +41,7 @@ def routes(c: Ctx = Depends()):
 
 
 @router.get("/routes/compare")
-def compare(destination: str = Query(..., description="forward location id, e.g. Base_04"), c: Ctx = Depends()):
+def compare(destination: IdQuery, c: Ctx = Depends()):
     """Feasible routes to a destination ranked by combined score, with the reason the best one was selected."""
     if destination not in {l.id for l in c.snap.forward}:
         raise HTTPException(404, f"unknown forward location {destination}")
@@ -52,7 +52,7 @@ def compare(destination: str = Query(..., description="forward location id, e.g.
     out = []
     for r in rows:
         d = route_dict(r["ev"], c.res, lens.get(r["ev"].id))
-        d.update({"combined_score": round(r["score"], 3), "decision": "NO VEHICLE" if not r["feasible"] else "SELECTED" if r["ev"].id == selected else "ALTERNATIVE"})
+        d.update({"combined_score": round(r["score"], 3), "decision": r["blocked_reason"].replace("NO AVAILABLE VEHICLE", "NO VEHICLE") if not r["feasible"] else "SELECTED" if r["ev"].id == selected else "ALTERNATIVE"})
         out.append(d)
     return {"destination": destination, "required_units": required, "routes": out, "selected": selected,
             "reason": rt.explain_selection(rows, destination),

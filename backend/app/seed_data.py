@@ -1,4 +1,4 @@
-"""Deterministic FICTIONAL synthetic dataset (port of the v3 prototype generator).
+"""Deterministic FICTIONAL simulated scenario dataset (port of the v3 generator).
 
 Used by scripts/generate_seed.py to render db/seed.sql, and by unit tests to build a Snapshot without a database.
 No real military bases, routes, units, deployments or sensitive information are represented. Coordinates are arbitrary
@@ -21,7 +21,7 @@ def _imul(a: int, b: int) -> int:
 
 
 def mulberry32(seed: int):
-    """Same PRNG as the v3 JavaScript prototype (bit-exact)."""
+    """Same PRNG as the v3 JavaScript version (bit-exact)."""
     s = seed & M32
 
     def rnd() -> float:

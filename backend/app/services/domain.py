@@ -2,7 +2,7 @@
 
 All engines in app/services are pure functions over these dataclasses so they can be
 unit-tested without a database. app/repository.py builds a Snapshot from PostgreSQL.
-All data is fictional and synthetic.
+All scenario data is fictional and simulated.
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 
 ND = 110          # days of history
 NF = 30           # days of forecast outlook
-# Simulation clock origin (history day index ND == this instant). Same value as the v3 prototype.
+# Simulation clock origin (history day index ND == this instant). Same value as the v3 version.
 T0 = datetime(2026, 6, 19, 6, 0, tzinfo=timezone.utc)
 
 

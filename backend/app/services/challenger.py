@@ -1,6 +1,6 @@
 """Random Forest challenger (cross-check only; does not drive dashboard numbers).
 
-Same design as the v3 prototype: 20 trees, depth 6, seeded, trained on days 1-90 of the synthetic history and validated on
+Compact cross-check: 20 trees, depth 6, seeded, trained on days 1-90 of the scenario history and validated on
 the last 20 days, with the statistical model scored on the same hold-out samples.
 """
 from __future__ import annotations

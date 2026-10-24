@@ -1,12 +1,11 @@
-# Build context for backend/Dockerfile is the repository root (it needs ./backend and ./db only).
-.git
-frontend
-docs
-legacy
-iot-simulator
-tests
+.env
+.env.*
 **/node_modules
 **/dist
 **/__pycache__
-**/*.pyc
-**/.pytest_cache
+.git
+docs
+legacy
+tests
+backend/tests
+*.zip

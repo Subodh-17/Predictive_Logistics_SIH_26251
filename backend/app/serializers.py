@@ -1,7 +1,7 @@
 """Convert engine results to JSON-ready dicts."""
 from __future__ import annotations
 
-from .services import terrain as T
+from .services import routing as rt, terrain as T
 from .services.domain import T0
 from .services.explain import best_route
 from .services.recommendation import recommend
@@ -33,7 +33,8 @@ def route_dict(ev, res, geo_len=None) -> dict:
                         "elevation_label": r.elevation_label, "risk": round(ev.terrain_risk, 4)},
             "nominal_speed_kmh": r.nominal_speed, "effective_speed_kmh": round(ev.speed, 2), "eta_h": round(ev.eta, 2),
             "delay_h": round(ev.delay, 2), "weather_risk": round(ev.weather_risk, 3), "weather_level": T.risk_level(ev.weather_risk),
-            "risk": round(ev.risk, 4), "risk_level": T.risk_level(ev.risk), "vehicle_capacity": cap, "feasible": cap > 0,
+            "risk": round(ev.risk, 4), "risk_level": T.risk_level(ev.risk), "vehicle_capacity": cap, "feasible": cap > 0 and ev.weather_risk < rt.CLOSURE_WEATHER_RISK,
+            "blocked_reason": "ROUTE CLOSED" if ev.weather_risk >= rt.CLOSURE_WEATHER_RISK else "NO AVAILABLE VEHICLE" if cap <= 0 else "",
             "coordinates": [[a, b] for a, b in r.coords]}
 
 

@@ -6,7 +6,7 @@ const KEY = 'plsd-theme'
 /** Colours that must be plain hex strings (SVG charts). Everything else uses CSS variables from index.css. */
 export interface Palette { grid: string; axis: string; tx: string; accent: string; danger: string; ok: string; ttBg: string; ttBorder: string }
 export const PALETTES: Record<Theme, Palette> = {
-  dark: { grid: '#24332f', axis: '#7f948b', tx: '#d6e2dc', accent: '#c9a44c', danger: '#e5534b', ok: '#3fbf7f', ttBg: '#121c1a', ttBorder: '#24332f' },
+  dark: { grid: '#24332f', axis: '#7f948b', tx: '#d6e2dc', accent: '#c9a44c', danger: '#ea6058', ok: '#3fbf7f', ttBg: '#121c1a', ttBorder: '#24332f' },
   light: { grid: '#b0bec7', axis: '#475950', tx: '#14201b', accent: '#7a5800', danger: '#b3261e', ok: '#127546', ttBg: '#ffffff', ttBorder: '#b0beb7' },
 }
 

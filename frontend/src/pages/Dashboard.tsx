@@ -1,8 +1,9 @@
+import { Fragment } from 'react'
 import { useApp } from '../state'
 import { usePalette } from '../theme'
 import { useApi } from '../api'
 import type { Allocation, Container, Dashboard as Dash, Insight, Loc, Priority, Route, Why } from '../types'
-import { Async, Card, ErrorBox, Grid2, GridHalf, Kpi, KpiGrid, PageTitle, StatusTag, Table } from '../components/ui'
+import { Async, Card, ErrorBox, Grid2, GridHalf, Kpi, KpiGrid, PageTitle, StatusTag, Table, act } from '../components/ui'
 import { dd, fx } from '../format'
 import { LineChartBox } from '../components/Charts'
 import LogisticsMap from '../components/LogisticsMap'
@@ -49,13 +50,26 @@ export default function Dashboard() {
         <Card title="GIS OVERVIEW · SUPPLY RISK (FICTIONAL · SIMULATED)">
           <Async state={locs} what="locations">{l => <Async state={routes} what="routes">{r => <LogisticsMap locs={l} routes={r} height={380} />}</Async>}</Async>
         </Card>
-        <Card title="CRITICAL ALERTS">
+        <Card title="CRITICAL ALERTS · TOP URGENT" action={<Async state={alerts}>{a => <span className="font-mono text-[10px] bg-cr/10 text-cr border border-cr/30 px-2 py-0.5 rounded-xs font-semibold">{a.critical} TOTAL</span>}</Async>}>
           <Async state={alerts} what="alerts">{a => {
-            const crit = a.alerts.filter(x => x.severity === 'CRITICAL').slice(0, 6)
-            return crit.length ? <>{crit.map(x => (
-              <div key={x.location + x.supply} className="p-2 border-l-[3px] border-cr bg-ins mb-1.5 cursor-pointer" onClick={() => pick('loc', x.location)}>
-                <b>{x.location} · {x.supply}</b><small className="block text-mu">{x.days_cover.toFixed(1)} d cover · stock-out {dd(x.stockout_date)} · lead {x.lead_days.toFixed(1)} d</small></div>))}</>
-              : <div className="p-2 border-l-[3px] border-ok bg-ins">No critical alerts</div>
+            const allCrit = a.alerts.filter(x => x.severity === 'CRITICAL')
+            const crit = allCrit.slice(0, 6)
+            return crit.length ? <>
+              {crit.map(x => (
+                <div key={x.location + x.supply} className="p-2.5 border-l-[3px] border-cr bg-ins/90 hover:bg-hov rounded-sm mb-2 cursor-pointer transition-all duration-75" {...act(() => pick('loc', x.location))}>
+                  <div className="flex items-center justify-between">
+                    <b className="font-medium text-tx">{x.location} · {x.supply}</b>
+                    <span className="font-mono text-[10px] text-cr uppercase font-semibold">CRITICAL</span>
+                  </div>
+                  <small className="block text-soft text-[11px] mt-1">{x.days_cover.toFixed(1)} d cover · stock-out {dd(x.stockout_date)} · lead {x.lead_days.toFixed(1)} d</small>
+                </div>))}
+              {allCrit.length > 6 && (
+                <div className="text-[11px] text-mu mt-2 border-t border-ln/60 pt-1.5 flex items-center justify-between">
+                  <span>Showing top 6 of {allCrit.length} critical items</span>
+                  <span className="font-mono text-[10px] text-act">RANKED BY COVER</span>
+                </div>
+              )}
+            </> : <div className="p-3 border-l-[3px] border-ok bg-ins/90 rounded-sm text-soft text-[12px]">No critical alerts</div>
           }}</Async>
         </Card>
       </Grid2>
@@ -63,9 +77,9 @@ export default function Dashboard() {
       <Grid2>
         <Card title="PREDICTED SHORTAGES · SUPPLY RISK">
           <Async state={inv} what="inventory">{items => (
-            <Table head={['LOCATION', 'SUPPLY', 'STOCK', 'PRED. 14 D', 'SAFETY', 'SHORTAGE DATE', 'REPLEN.']}>
+            <Table head={['LOCATION', 'SUPPLY', 'STOCK', 'PRED. DEMAND (14 D)', 'SAFETY', 'SHORTAGE DATE', 'REPLEN.']}>
               {items.filter(i => i.status !== 'NORMAL').slice(0, 8).map(i => (
-                <tr key={i.location + i.supply} className="row" onClick={() => pick('loc', i.location)}>
+                <tr key={i.location + i.supply} className="row" {...act(() => pick('loc', i.location))}>
                   <td>{i.location}</td><td>{i.supply}</td><td>{fx(i.stock)}</td><td>{fx(i.daily_use * 14)}</td><td>{fx(i.safety_stock)}</td>
                   <td>{dd(i.stockout_date)} <StatusTag s={i.status} /></td><td>{fx(i.replenish_qty)}</td></tr>))}
             </Table>)}</Async>
@@ -106,13 +120,17 @@ export default function Dashboard() {
             <Table head={['ENGINE', 'STATE', 'DETAIL']}>{d.system_status.map(h => (
               <tr key={h.engine}><td>{h.engine}</td><td><span className={`inline-block w-2 h-2 rounded-full mr-1.5 ${h.ok ? 'bg-ok' : 'bg-cr'}`} />{h.ok ? 'OPERATIONAL' : 'DEGRADED'}</td><td>{h.detail}</td></tr>))}</Table>)}</Async></Card>
           <Card title="DATA COVERAGE"><Async state={dash}>{d => (
-            <div className="grid grid-cols-[auto_1fr] gap-x-3.5 gap-y-1">{Object.entries(d.data_coverage).map(([k, v]) => <><span key={k} className="text-mu">{k.replace(/_/g, ' ')}</span><div key={k + 'v'}>{fx(v)}</div></>)}</div>)}</Async></Card>
+            <div className="grid grid-cols-[auto_1fr] gap-x-3.5 gap-y-1">{Object.entries(d.data_coverage).map(([k, v]) => <Fragment key={k}><span className="text-mu">{k.replace(/_/g, ' ')}</span><div>{fx(v)}</div></Fragment>)}</div>)}</Async></Card>
         </div>
       </GridHalf>
 
       <Card title="DATA PIPELINE"><Async state={dash}>{d => (
-        <div className="flex flex-wrap gap-2 items-stretch">{d.pipeline.map(p => (
-          <div key={p.stage} className="border border-ln bg-pn2 px-2.5 py-1.5 flex-1 min-w-[120px]"><b className="block">{p.stage}</b><small className="text-mu">{p.detail}</small></div>))}</div>)}</Async></Card>
+        <div className="flex flex-wrap gap-2.5 items-stretch">{d.pipeline.map((p, idx) => (
+          <div key={p.stage} className="border border-ln/70 bg-pn2/80 rounded-sm px-3 py-2 flex-1 min-w-[130px] shadow-xs">
+            <span className="block font-mono text-[9px] text-mu uppercase tracking-wider mb-0.5">{`STAGE 0${idx + 1}`}</span>
+            <b className="block text-[12.5px] font-semibold text-tx">{p.stage}</b>
+            <small className="text-soft text-[11px] block mt-0.5">{p.detail}</small>
+          </div>))}</div>)}</Async></Card>
     </div>
   )
 }

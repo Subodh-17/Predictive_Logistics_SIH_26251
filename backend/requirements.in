@@ -1,0 +1,11 @@
+# Direct runtime dependencies (ranges). The fully pinned, hash-locked set is requirements.txt (generated: see docs/DEPENDENCIES.md).
+fastapi>=0.110
+uvicorn[standard]>=0.29
+sqlalchemy>=2.0
+psycopg[binary]>=3.1
+geoalchemy2>=0.14
+pydantic>=2.6
+scikit-learn>=1.4
+numpy>=1.26
+lightgbm>=4.3,<5
+PyJWT>=2.8

@@ -16,7 +16,12 @@ from app.seed_data import build_dataset, snapshot_from_dataset  # noqa: E402
 from app.services import engine  # noqa: E402
 from app.services.domain import Params  # noqa: E402
 
-html = (ROOT / "legacy" / "v3" / "index.html").read_text()
+_v3 = ROOT / "legacy" / "v3" / "index.html"
+if not _v3.exists():
+    raise SystemExit("legacy/v3/index.html is not part of the V7 archive (its on-screen wording predates the terminology rules). The stored fixture "
+                     "backend/tests/golden_v3.json is what the test suite compares against. To regenerate it, restore legacy/v3/index.html from the "
+                     "V6 archive and run this script again.")
+html = _v3.read_text()
 js = re.search(r"<script>(.*)</script>", html, re.S).group(1)
 js = js.replace("const B0=Date.now();draw();setInterval(clk,1000);", "").replace("document.getElementById('app')", "({})")
 harness = "globalThis.document={getElementById:()=>({})};globalThis.window=globalThis;\n" + js + """

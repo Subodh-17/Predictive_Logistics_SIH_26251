@@ -10,10 +10,10 @@ const BORDER_TONE = { cr: 'border-cr', wr: 'border-wr', ok: 'border-ok' }
 
 function Tile({ label, value, sub, children, t = '' }: { label: string; value: React.ReactNode; sub?: React.ReactNode; children?: React.ReactNode; t?: 'cr' | 'wr' | 'ok' | '' }) {
   return (
-    <div className={`bg-ins border border-ln border-t-2 px-3 py-2 min-w-0 ${t ? BORDER_TONE[t].replace('border-', 'border-t-') : 'border-t-ln'}`}>
-      <span className="block font-mono text-[10px] tracking-[.1em] text-mu">{label}</span>
-      <span className={`block text-[20px] font-semibold tabular-nums leading-tight mt-0.5 ${t ? TEXT_TONE[t] : ''}`}>{value}</span>
-      {sub && <span className="block text-[11px] text-mu mt-0.5">{sub}</span>}
+    <div className={`bg-ins/90 border border-ln/80 border-t-2 px-3 py-2.5 min-w-0 rounded-sm ${t ? BORDER_TONE[t].replace('border-', 'border-t-') : 'border-t-ln'}`}>
+      <span className="block font-mono text-[10px] tracking-[.12em] text-mu uppercase">{label}</span>
+      <span className={`block text-[22px] font-bold tabular-nums leading-tight mt-0.5 ${t ? TEXT_TONE[t] : ''}`}>{value}</span>
+      {sub && <span className="block text-[11px] text-soft mt-0.5 leading-snug">{sub}</span>}
       {children}
     </div>
   )
@@ -41,10 +41,10 @@ export default function CommandBriefing({ dash, locs, inv, alerts, actions }: { 
             {k && <div className="pb-1.5"><LevelTag level={String(k.risk_band)} /></div>}
           </div>
           <div className="relative mt-3 mb-5" role="img" aria-label={`Overall risk ${risk ?? 'unknown'} out of 100`}>
-            <div className="flex h-2.5 overflow-hidden border border-ln">
+            <div className="flex h-2.5 overflow-hidden border border-ln rounded-xs">
               <i className="bg-ok" style={{ width: '25%' }} /><i className="bg-wrf" style={{ width: '20%' }} /><i className="bg-cr opacity-70" style={{ width: '20%' }} /><i className="bg-cr" style={{ width: '35%' }} />
             </div>
-            {risk !== null && <i className="absolute -top-1 w-[3px] h-[18px] bg-hi -translate-x-1/2 border border-bg" style={{ left: Math.min(100, risk) + '%' }} />}
+            {risk !== null && <i className="absolute -top-1 w-[3px] h-[18px] bg-hi -translate-x-1/2 border border-bg shadow-[0_0_4px_rgba(255,255,255,0.8)]" style={{ left: Math.min(100, risk) + '%' }} />}
             <div className="flex justify-between font-mono text-[9px] text-mu mt-1"><span>LOW 0</span><span>MODERATE 25</span><span>HIGH 45</span><span>SEVERE 65+</span></div>
           </div>
           <div className="grid gap-2.5 grid-cols-1 sm:grid-cols-2">
@@ -62,19 +62,19 @@ export default function CommandBriefing({ dash, locs, inv, alerts, actions }: { 
 
         <Card title="TOP 3 RECOMMENDED ACTIONS · RULE-BASED DECISION SUPPORT" accent className="min-w-0">
           {actions.length === 0 && <div className="text-mu">Loading recommendations…</div>}
-          <ol className="space-y-2 list-none p-0 m-0">
+          <ol className="space-y-2.5 list-none p-0 m-0">
             {actions.map(a => (
-              <li key={a.p.location + a.p.supply} className="border-l-[3px] border-ln pl-2.5 py-0.5" style={{ borderLeftColor: 'rgb(var(--' + tone(a.p.status) + '))' }}>
+              <li key={a.p.location + a.p.supply} className="border-l-[3px] border-ln/60 bg-ins/60 hover:bg-hov/50 p-2.5 rounded-sm transition-colors" style={{ borderLeftColor: 'rgb(var(--' + tone(a.p.status) + '))' }}>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <b className="font-mono">#{a.p.rank}</b><StatusTag s={a.p.status} /><span className="font-mono text-mu text-[11px]">priority {a.p.score}/100</span>
+                  <b className="font-mono text-act">#{a.p.rank}</b><StatusTag s={a.p.status} /><span className="font-mono text-mu text-[11px]">priority {a.p.score}/100</span>
                 </div>
-                <div className="text-[13px] mt-0.5">{a.headline}.</div>
-                <div className="text-[11px] text-mu mt-0.5">
+                <div className="text-[13px] font-medium mt-1 text-tx">{a.headline}.</div>
+                <div className="text-[11.5px] text-soft mt-1 leading-snug">
                   {a.p.supply} runs out in <b className="text-tx">{a.p.days_cover.toFixed(1)} d</b> ({dd(a.p.stockout_date)})
-                  {a.route && <> · main route {a.route.id} {a.route.depot} → {a.route.destination}: ETA {a.route.eta_h.toFixed(1)} h, risk <b className="text-tx">{a.route.risk_level}</b></>}
-                  {a.unmet > 0 && <> · <span className="text-wr">unmet {fx(a.unmet)} units{a.unmetReason ? ` (${a.unmetReason.toLowerCase()})` : ''}</span></>}
+                  {a.route && <> · main route <span className="font-mono">{a.route.id}</span> {a.route.depot} → {a.route.destination}: ETA {a.route.eta_h.toFixed(1)} h, risk <b className="text-tx">{a.route.risk_level}</b></>}
+                  {a.unmet > 0 && <> · <span className="text-wr font-medium">unmet {fx(a.unmet)} units{a.unmetReason ? ` (${a.unmetReason.toLowerCase()})` : ''}</span></>}
                 </div>
-                <div className="mt-1"><Btn onClick={() => pick('loc', a.p.location)}>{`SHOW ${a.p.location} ON MAP ›`}</Btn></div>
+                <div className="mt-2"><Btn onClick={() => pick('loc', a.p.location)}>{`SHOW ${a.p.location} ON MAP ›`}</Btn></div>
               </li>
             ))}
           </ol>

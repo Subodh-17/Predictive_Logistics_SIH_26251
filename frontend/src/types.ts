@@ -5,6 +5,7 @@ export const BASELINE: Scenario = { demand: 0, weather: 0, road: 0, vehicles: 1 
 export interface Health {
   status: 'ok' | 'degraded'; api: string; data_notice: string; simulated_iot: boolean
   database: { connected: boolean; postgis?: string; counts?: Record<string, number>; error?: string }
+  components?: Record<string, { status: string; family?: string }>
 }
 export interface Loc {
   id: string; name: string; kind: 'DEPOT' | 'FORWARD'; lat: number; lon: number; status: Status | null

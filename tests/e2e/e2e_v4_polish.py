@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """E2E for the V4 polish pass: decision-flow strip, advisory recommendation banner, WHY THIS ROUTE?, IoT value flow,
-extra What-If response lines, synthetic time label, confidence-index wording, both themes, 390 px. Separate file; the older E2E files are unchanged
+extra What-If response lines, simulation time label, confidence-index wording, both themes, 390 px. Separate file; the older E2E files are unchanged
 except two assertions in e2e_ui_enhancements.py that were updated for the deliberate label changes (header clock, confidence index).
 
     APP_URL=http://localhost:8080 python tests/e2e/e2e_v4_polish.py
 
 UI numbers are cross-checked against the backend API. Exits 2 (no tests run) if /api/health is not OK.
-Prototype uses fictional synthetic logistics data and is intended for decision-support demonstration only.
+Uses the fictional illustrative scenario (simulated telemetry); requires E2E_USER / E2E_PASSWORD of an existing account.
 """
 import json, os, re, sys, urllib.request
 from collections import OrderedDict
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from common import login, http as api, preflight as _preflight
 
 URL = os.environ.get('APP_URL', 'http://localhost:8080').rstrip('/')
 SHOTS = os.environ.get('E2E_SHOTS', '/tmp/e2e_v4_shots'); os.makedirs(SHOTS, exist_ok=True)
@@ -21,17 +23,13 @@ def check(area, name, ok, detail=''):
     results.append((area, name, 'PASS' if ok else 'FAIL', str(detail)))
     print(('PASS' if ok else 'FAIL'), f'[{area}]', name, ('· ' + str(detail)) if detail else '', flush=True)
 
-def api(path, method='GET', body=None):
-    req = urllib.request.Request(URL + path, method=method, data=None if body is None else json.dumps(body).encode(), headers={'Content-Type': 'application/json'})
-    with urllib.request.urlopen(req, timeout=60) as r: return json.loads(r.read())
-
 def inr(n):                      # en-IN digit grouping, as the UI prints it
     s = str(int(round(n))); neg = s.startswith('-'); s = s.lstrip('-')
     if len(s) > 3: s = (re.sub(r'(\d)(?=(\d\d)+$)', r'\1,', s[:-3]) + ',' + s[-3:])
     return ('-' if neg else '') + s
 
 try:
-    h = api('/api/health'); ok = h['status'] == 'ok' and h['database']['connected']
+    h = api('/api/health'); ok = h['status'] == 'ok' and h['database']['connected'] and _preflight()
 except Exception as e: ok = False; print('preflight failed:', e)
 if not ok: print('ENVIRONMENT NOT READY - no tests were run.'); sys.exit(2)
 api('/api/iot/reset', 'POST')
@@ -46,7 +44,7 @@ with sync_playwright() as p:
     go = lambda s: (pg.click(f'nav >> text={SCREENS[s]}'), pg.wait_for_timeout(1500))
     theme = lambda: pg.evaluate("document.documentElement.getAttribute('data-theme')")
     setr = "(el,v)=>{const s=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;s.call(el,v);el.dispatchEvent(new Event('input',{bubbles:true}))}"
-    pg.goto(URL); pg.wait_for_selector('[data-testid=decision-flow]'); pg.wait_for_timeout(1800)
+    login(pg); pg.wait_for_selector('[data-testid=decision-flow]'); pg.wait_for_timeout(1800)
 
     # ---------------------------------------------------------------- 2. decision flow on the dashboard
     flow = pg.inner_text('[data-testid=decision-flow]'); dash, prio, alloc = api('/api/dashboard'), api('/api/priority'), api('/api/allocation')
@@ -69,8 +67,8 @@ with sync_playwright() as p:
 
     # ---------------------------------------------------------------- 7. time label
     hd = pg.inner_text('main > div:first-child')
-    check('Header', 'SIMULATION TIME · <date> and DATA · SYNTHETIC; no HH:MMZ timestamp', bool(re.search(r'SIMULATION TIME · \d{1,2} [A-Z]{3} 2026', hd)) and 'DATA · SYNTHETIC' in hd and not re.search(r'\d\d:\d\dZ', hd), hd[:160].replace('\n', ' '))
-    check('Header', 'synthetic-data disclaimer footer visible', pg.locator('text=Prototype uses fictional synthetic logistics data').first.is_visible())
+    check('Header', 'SIMULATION TIME · <date> and DATA · ILLUSTRATIVE SCENARIO; no HH:MMZ timestamp', bool(re.search(r'SIMULATION TIME · \d{1,2} [A-Z]{3} 2026', hd)) and 'DATA · ILLUSTRATIVE SCENARIO' in hd and not re.search(r'\d\d:\d\dZ', hd), hd[:160].replace('\n', ' '))
+    check('Header', 'scenario-data disclaimer footer visible', pg.locator('text=Illustrative scenario: fictional locations and simulated telemetry').first.is_visible())
 
     # ---------------------------------------------------------------- 4. GIS: WHY THIS ROUTE?
     go('GIS'); pg.wait_for_selector('[data-testid=route-selected]'); pg.wait_for_timeout(1500)

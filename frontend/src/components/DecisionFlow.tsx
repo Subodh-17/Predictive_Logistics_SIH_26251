@@ -12,7 +12,7 @@ export default function DecisionFlow({ dash, prio, alloc, actions }: { dash: Das
   const top = prio?.[0]
   const route = actions[0]?.route
   const steps: Step[] = [
-    { name: 'DATA', does: 'Synthetic consumption, stock, weather, fleet', live: dash ? `${fx(dash.data_coverage.historical_records)} records` : '…' },
+    { name: 'DATA', does: 'Scenario consumption, stock, weather, fleet (simulated)', live: dash ? `${fx(dash.data_coverage.historical_records)} records` : '…' },
     { name: 'FORECAST', does: 'Demand per location and supply', live: k ? `${fx(Number(k.supplies_at_risk_units))} units short · 14 d` : '…' },
     { name: 'RISK', does: 'Days of supply → GREEN / YELLOW / RED', live: k ? `${k.risk_index}/100 · ${k.risk_band}` : '…' },
     { name: 'PRIORITY', does: 'Rank shortages by weighted score', live: top ? `#1 ${top.location} · ${top.supply}` : prio ? 'none at risk' : '…' },
@@ -27,17 +27,17 @@ export default function DecisionFlow({ dash, prio, alloc, actions }: { dash: Das
           const last = i === steps.length - 1
           return (
             <li key={s.name} className="contents lg:flex lg:flex-1 lg:min-w-0 lg:items-stretch">
-              <div data-testid={`flow-step-${i + 1}`} className={`bg-ins border px-2.5 py-1.5 min-w-0 lg:flex-1 ${last ? 'border-ac' : 'border-ln'}`}>
-                <span className={`block font-mono text-[10px] tracking-[.12em] ${last ? 'text-act' : 'text-mu'}`}>{i + 1} · {s.name}</span>
-                <span className="block text-[11px] text-mu leading-snug">{s.does}</span>
-                <span className="block font-mono text-[11px] text-tx mt-0.5 break-words">{s.live}</span>
+              <div data-testid={`flow-step-${i + 1}`} className={`bg-ins/80 border px-3 py-2 min-w-0 lg:flex-1 rounded-sm shadow-xs ${last ? 'border-ac shadow-[0_0_8px_rgba(206,168,78,0.2)]' : 'border-ln/70'}`}>
+                <span className={`block font-mono text-[10px] font-semibold tracking-[.14em] uppercase ${last ? 'text-act' : 'text-mu'}`}>{`0${i + 1}`} · {s.name}</span>
+                <span className="block text-[11px] text-soft leading-snug mt-0.5">{s.does}</span>
+                <span className="block font-mono text-[11.5px] font-medium text-tx mt-1 break-words">{s.live}</span>
               </div>
-              {!last && <span aria-hidden className="hidden lg:flex items-center px-1 text-act">→</span>}
+              {!last && <span aria-hidden className="hidden lg:flex items-center px-1 text-act/70 font-mono text-[12px]">→</span>}
             </li>
           )
         })}
       </ol>
-      <div className="text-[11px] text-mu mt-2">Rule-based, deterministic pipeline on synthetic data. The final step is decision support: authorized personnel review and decide; nothing is dispatched automatically.</div>
+      <div className="text-[11px] text-mu mt-2">Rule-based, deterministic pipeline on illustrative scenario data. The final step is decision support: authorized personnel review and decide; nothing is dispatched automatically.</div>
     </Card>
   )
 }

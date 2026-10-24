@@ -5,9 +5,9 @@ import { usePalette } from '../theme'
 
 export interface Pt { date: string; [k: string]: number | string | null | number[] | undefined }
 
-export function LineChartBox({ data, lines, band, height = 250, xFormat = dd, refLine, zoom = false }: {
+export function LineChartBox({ data, lines, band, height = 250, xFormat = dd, refLine, zoom = false, label = 'Line chart' }: {
   data: Pt[]; lines: { key: string; name: string; color: string; dashed?: boolean }[]; band?: { key: string; name: string }; height?: number
-  xFormat?: (s: string) => string; refLine?: { y: number; label: string }; zoom?: boolean
+  xFormat?: (s: string) => string; refLine?: { y: number; label: string }; zoom?: boolean; label?: string
 }) {
   const pal = usePalette()
   const AX = { stroke: pal.grid, tick: { fill: pal.axis, fontSize: 10 } }
@@ -20,7 +20,7 @@ export function LineChartBox({ data, lines, band, height = 250, xFormat = dd, re
     if (vs.length) { const lo = Math.min(...vs), hi = Math.max(...vs), pad = (hi - lo) * 0.12 || hi * 0.05; domain = [Math.max(0, Math.floor(lo - pad)), Math.ceil(hi + pad)] }
   }
   return (
-    <div style={{ height }} role="img" aria-label="chart">
+    <div style={{ height }} role="img" aria-label={label}>
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
           <CartesianGrid stroke={pal.grid} strokeOpacity={0.6} vertical={false} />

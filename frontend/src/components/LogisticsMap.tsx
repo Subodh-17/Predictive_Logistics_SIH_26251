@@ -6,6 +6,16 @@ import { fx, riskColor, riskLevel, statusColor } from '../format'
 import { useApp } from '../state'
 import { usePalette } from '../theme'
 
+// Tile provider configuration.
+// Set VITE_TILE_URL at build time to use an alternative provider (e.g. Stadia Maps).
+// Set VITE_TILE_ATTRIBUTION to the corresponding attribution HTML.
+// Defaults to OpenStreetMap standard tiles, which require a valid HTTP Referer header
+// (the nginx Referrer-Policy must be 'strict-origin-when-cross-origin', not 'no-referrer').
+const TILE_URL = import.meta.env.VITE_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+const TILE_ATTRIBUTION = import.meta.env.VITE_TILE_ATTRIBUTION ||
+  '\u00a9 <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors \u00b7 fictional overlay'
+
+
 const depotIcon = L.divIcon({ className: '', html: '<div class="depot-icon"></div>', iconSize: [14, 14], iconAnchor: [7, 7] })
 export interface MapFocus { selected: string | null; alternatives: string[]; source?: string; dest?: string }
 
@@ -31,13 +41,18 @@ const ELEV_COLOR = ['#27413a', '#3d5a3f', '#6b6a3a', '#8a5a3a']
 function Fit({ locs }: { locs: Loc[] }) {
   const map = useMap()
   useEffect(() => {
-    if (locs.length) map.fitBounds(L.latLngBounds(locs.map(l => [l.lat, l.lon] as [number, number])).pad(0.18))
-    setTimeout(() => map.invalidateSize(), 50)
+    if (locs.length) map.fitBounds(L.latLngBounds(locs.map(l => [l.lat, l.lon] as [number, number])).pad(0.18), { animate: false })
+    // The size refresh is deferred; if the page is left before it fires, the map has already been removed and Leaflet would throw
+    // ("_leaflet_pos" of undefined). Cancel on unmount and re-check that the container is still in the document.
+    const t = window.setTimeout(() => { if (map.getContainer().isConnected) map.invalidateSize({ animate: false }) }, 50)
+    return () => window.clearTimeout(t)
   }, [locs, map])
   return null
 }
 
-/** Leaflet + OpenStreetMap map of the fictional network. Tile failures degrade to a plain background; the overlay keeps working. */
+/** Leaflet map of the fictional network. Tile failures degrade to a plain background; the overlay keeps working.
+ * Tile provider: OSM by default (requires Referrer-Policy strict-origin-when-cross-origin in nginx);
+ * configurable via VITE_TILE_URL / VITE_TILE_ATTRIBUTION build-time environment variables. */
 export default function LogisticsMap({ locs, routes, height = 460, focus }: { locs: Loc[]; routes: Route[]; height?: number; focus?: MapFocus }) {
   const { sel, pick } = useApp()
   const pal = usePalette()
@@ -48,12 +63,12 @@ export default function LogisticsMap({ locs, routes, height = 460, focus }: { lo
     <div>
       <div className="flex flex-wrap items-center gap-3 mb-2 text-[11px] text-mu">
         <label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={terrain} onChange={e => setTerrain(e.target.checked)} />Terrain / elevation layer</label>
-        {failed && <span role="status" className="text-wr border border-wr px-2 py-0.5">OpenStreetMap tiles unavailable (offline or blocked) — showing the fictional overlay on a plain background.</span>}
+        {failed && <span role="status" className="text-wr border border-wr px-2 py-0.5">Map tiles unavailable (offline, blocked, or provider not configured) — fictional overlay still shown on a plain background.</span>}
       </div>
       <div className="border border-ln" style={{ height }} data-testid="leaflet-map">
         <MapContainer center={[22.3, 79.0]} zoom={9} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
-          <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · fictional overlay'
-            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" eventHandlers={{ tileerror: () => setTilesFailed(n => n + 1), tileload: () => setTilesFailed(0) }} />
+          <TileLayer attribution={TILE_ATTRIBUTION}
+            url={TILE_URL} eventHandlers={{ tileerror: () => setTilesFailed(n => n + 1), tileload: () => setTilesFailed(0) }} />
           <Fit locs={locs} />
           {terrain && routes.map(r => (
             <Polyline key={'t' + r.id} positions={r.coordinates} pathOptions={{ color: ELEV_COLOR[r.terrain.elevation_band], weight: 16 + r.terrain.difficulty * 14, opacity: 0.45, lineCap: 'round' }}>
@@ -84,7 +99,7 @@ export default function LogisticsMap({ locs, routes, height = 460, focus }: { lo
             )
           })}
           {locs.filter(l => l.kind === 'DEPOT').map(l => (
-            <Marker key={l.id} position={[l.lat, l.lon]} icon={depotIcon}>
+            <Marker key={l.id} position={[l.lat, l.lon]} icon={depotIcon} title={`${l.name} (depot)`} alt={`${l.name} (depot)`}>
               <Tooltip permanent direction="bottom" offset={[0, 6]}>{l.id}{focus?.source === l.id ? ' · SOURCE' : ''}</Tooltip>
               <Popup><b>{l.name}</b><br />Depot · available vehicle capacity {fx(l.available_capacity)} units</Popup>
             </Marker>

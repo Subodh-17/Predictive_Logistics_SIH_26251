@@ -1,6 +1,6 @@
 import { useApi } from '../api'
 import { useApp } from '../state'
-import { Async, Card, ErrorBox, Grid2, KV, LevelTag, Note, PageTitle, StatusTag, Table } from '../components/ui'
+import { Async, Card, ErrorBox, Grid2, KV, LevelTag, Note, PageTitle, StatusTag, Table, act } from '../components/ui'
 import LogisticsMap from '../components/LogisticsMap'
 import { InsightPanel, RouteComparison, WhyAtRisk } from '../components/Panels'
 import RouteSelection, { type Compare } from '../components/RouteSelection'
@@ -27,12 +27,21 @@ export default function Gis() {
       <Grid2>
         <Card title="SIMULATED GIS LOGISTICS VIEW · FICTIONAL LOCATIONS & ROUTES">
           {selRoute && cmp.data && (
-            <div data-testid="route-banner" className="mb-2 border border-ln bg-ins px-3 py-1.5 text-[12px]">
-              <b className="text-act font-mono">SELECTED ROUTE {selRoute.id}</b> · {selRoute.depot} <span className="text-act">→</span> {selRoute.destination} · {selRoute.distance_km} km · ETA {selRoute.eta_h.toFixed(1)} h · risk <b>{selRoute.risk_level}</b> ({Math.round(selRoute.risk * 100)})
-              {focus && focus.alternatives.length > 0 ? <> · alternatives (dotted): {focus.alternatives.join(', ')}</> : <> · single corridor, no alternative</>}
+            <div data-testid="route-banner" className="mb-2.5 border border-ac/70 bg-ins/90 px-3.5 py-2 text-[12.5px] rounded-sm flex flex-wrap items-center gap-2">
+              <span className="text-act font-mono font-bold tracking-wide">SELECTED ROUTE {selRoute.id}</span>
+              <span className="font-mono text-tx">{selRoute.depot} <span className="text-act">→</span> {selRoute.destination}</span>
+              <span className="text-mu">·</span>
+              <span className="tabular-nums">{selRoute.distance_km} km</span>
+              <span className="text-mu">·</span>
+              <span className="tabular-nums">ETA {selRoute.eta_h.toFixed(1)} h</span>
+              <span className="text-mu">·</span>
+              <span>risk <b className="text-tx">{selRoute.risk_level}</b> ({Math.round(selRoute.risk * 100)})</span>
+              <span className="text-soft text-[11.5px]">
+                {focus && focus.alternatives.length > 0 ? <>· alternatives (dotted): {focus.alternatives.join(', ')}</> : <>· single corridor, no alternative</>}
+              </span>
             </div>)}
           <Async state={locs} what="locations">{l => <Async state={routes} what="routes">{r => <LogisticsMap locs={l} routes={r} height={520} focus={focus} />}</Async>}</Async>
-          <Note>All depots, forward locations, coordinates, roads and terrain are fictional and generated for this prototype.</Note>
+          <Note>All depots, forward locations, coordinates, roads and terrain are fictional and simulated for this illustrative scenario.</Note>
         </Card>
         <div className="grid gap-3 content-start min-w-0">
           {sel.kind === 'loc' && <Async state={detail} what="location detail">{d => { const l = d.location; return (<>
@@ -62,7 +71,7 @@ export default function Gis() {
       <Card title="ROUTES · TRANSPORT"><Async state={routes} what="routes">{rs => (
         <Table head={['ID', 'FROM', 'TO', 'KM', 'ETA H', 'ROAD', 'TERRAIN · RISK', 'WEATHER', 'CAPACITY', 'RISK']}>
           {rs.map(r => (
-            <tr key={r.id} className={`row ${sel.kind === 'rt' && sel.id === r.id ? 'sel' : ''}`} onClick={() => pick('rt', r.id)}>
+            <tr key={r.id} className={`row ${sel.kind === 'rt' && sel.id === r.id ? 'sel' : ''}`} {...act(() => pick('rt', r.id))}>
               <td>{r.id}</td><td>{r.depot}</td><td>{r.destination}</td><td>{r.distance_km}</td><td>{r.eta_h.toFixed(1)}</td><td>{r.road_label}</td>
               <td>{r.terrain.type} · {Math.round(r.terrain.risk * 100)}</td><td>{r.weather_level}</td><td>{fx(r.vehicle_capacity)}</td><td><LevelTag level={r.risk_level} /></td></tr>))}
         </Table>)}</Async></Card>

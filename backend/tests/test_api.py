@@ -8,7 +8,7 @@ def test_health(client):
     r = client.get("/api/health").json()
     assert r["status"] == "ok" and r["database"]["connected"] and r["database"]["postgis"].startswith("3.")
     assert r["database"]["counts"]["consumption"] >= 5500 and r["simulated_iot"] is True
-    assert "fictional synthetic" in r["data_notice"]
+    assert "fictional" in r["data_notice"] and "not operational records" in r["data_notice"]
 
 
 def test_locations_routes_vehicles(client):

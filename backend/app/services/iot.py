@@ -37,7 +37,7 @@ def apply_event(stock: float, event_type: str, quantity: float) -> Applied:
 
 
 def feed_from_allocation(alloc, t0_epoch_minutes: int = 0) -> list:
-    """Simulated in-transit container feed derived from the allocation plan (same rule as the v3 prototype)."""
+    """Simulated in-transit container feed derived from the allocation plan (same rule as the v3 version)."""
     states = ["IN TRANSIT", "LOADING", "STAGED"]
     legs = [(r.prio.item, g) for r in alloc.rows for g in r.legs]
     out = []

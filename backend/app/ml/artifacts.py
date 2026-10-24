@@ -55,6 +55,8 @@ def read_verified(dirpath: Path, *, expected_kind: str, pin: str | None = None) 
         meta = json.loads(meta_p.read_text())
     except (OSError, ValueError) as e:
         raise ArtifactError(f"unreadable metadata: {e}") from e
+    if not isinstance(meta, dict):
+        raise ArtifactError(f"metadata.json root must be a JSON object, got {type(meta).__name__}")
     if meta.get("kind") != expected_kind:
         raise ArtifactError(f"artefact kind is {meta.get('kind')!r}, expected {expected_kind!r}")
     if meta.get("schema_version") != F.SCHEMA_VERSION and expected_kind == "demand_forecast":

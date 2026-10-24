@@ -21,7 +21,7 @@ function CompareRuns({ tick }: { tick: number }) {
   const list = runs.data ?? []
   return (
     <Card title="COMPARE SAVED SCENARIOS" className="mb-3">
-      {runs.error ? <ErrorBox error={runs.error} /> : list.length < 2 ? <p className="text-mu" data-testid="cmp-empty">Run at least two simulations to compare them side by side.</p> : (<>
+      {runs.loading ? <Loading what="saved scenarios" /> : runs.error ? <ErrorBox error={runs.error} /> : list.length < 2 ? <p className="text-mu" data-testid="cmp-empty">Run at least two simulations to compare them side by side.</p> : (<>
         <div className="grid gap-3 md:grid-cols-2 mb-2 min-w-0">
           {(['a', 'b'] as const).map(k => (
             <label key={k} className="text-[11px] text-mu min-w-0 block">SCENARIO {k.toUpperCase()}<br />

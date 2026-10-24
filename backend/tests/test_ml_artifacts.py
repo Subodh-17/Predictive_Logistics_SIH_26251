@@ -247,3 +247,35 @@ def test_interval_array_length_and_value_validation(monkeypatch, art):
     with pytest.raises(ArtifactError, match="incomplete or malformed"):
         MLForecaster.load(art)
 
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        [1, 2, 3],
+        None,
+        "scalar string",
+        42,
+        3.14,
+        True,
+    ],
+)
+def test_non_dict_metadata_raises_artifact_error(monkeypatch, art, payload):
+    p = _meta_path(art)
+    p.write_text(json.dumps(payload))
+
+    from app.ml.artifacts import current_version_dir, read_verified
+
+    d = current_version_dir(art, "forecast")
+    with pytest.raises(ArtifactError, match="metadata.json root must be a JSON object"):
+        read_verified(d, expected_kind="demand_forecast")
+
+    with pytest.raises(ArtifactError, match="metadata.json root must be a JSON object"):
+        MLForecaster.load(art)
+
+    monkeypatch.setattr(config, "FORECAST_MODEL_MODE", "ml")
+    monkeypatch.setattr(config, "ML_ARTIFACT_DIR", art)
+    ms.reset_cache()
+    r = ms.resolve_forecast()
+    assert r.family == "statistical" and r.is_fallback is True
+    assert "must be a JSON object" in (r.reason or "")

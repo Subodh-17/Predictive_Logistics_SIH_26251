@@ -91,7 +91,7 @@ def test_every_get_operation_in_the_openapi_spec_is_covered(client):
 
 def test_user_visible_error_messages_are_clean(client, operator_client, anon_client):
     responses = [client.get("/api/inventory/projection?location=x&supply=y"), client.post("/api/ml/shortage-risk", json={"demand": [1]}),
-                 client.get("/api/forecast?location=NOPE"), client.get("/api/forecast?horizon=7000"), anon_client.get("/api/dashboard"),
+                 client.get("/api/forecast?location=NOPE"), client.get("/api/forecast?horizon=7000"), anon_client.get("/api/auth/me"),
                  anon_client.post("/api/auth/login", json={"username": "x", "password": "y"}), operator_client.post("/api/iot/reset"),
                  client.post("/api/users", json={"username": "ab", "password": "x"}), client.get("/api/nope")]
     for r in responses:

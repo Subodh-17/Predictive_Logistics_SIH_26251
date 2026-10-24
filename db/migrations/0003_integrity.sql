@@ -1,4 +1,8 @@
 -- 0003 additional integrity constraints and indexes (all idempotent; verified against the seeded scenario by the test suite).
+ALTER TABLE forecasts ADD COLUMN IF NOT EXISTS lo double precision;
+ALTER TABLE forecasts ADD COLUMN IF NOT EXISTS hi double precision;
+ALTER TABLE forecasts ADD COLUMN IF NOT EXISTS generated_at timestamptz NOT NULL DEFAULT now();
+
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'routes_depot_not_destination') THEN

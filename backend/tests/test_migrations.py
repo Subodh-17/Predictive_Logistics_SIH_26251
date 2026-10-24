@@ -93,6 +93,15 @@ def test_v5_database_is_adopted_not_recreated(scratch):
     assert q(scratch, "select count(*) from supplies where id='Keep'")[0][0] == 1       # existing data untouched
 
 
+def test_v5_legacy_database_without_forecast_intervals_migrates_cleanly(scratch):
+    q(scratch, (MIGRATIONS / "0001_baseline.sql").read_text())
+    q(scratch, "ALTER TABLE forecasts DROP COLUMN lo, DROP COLUMN hi, DROP COLUMN generated_at")
+    done = migrate.migrate(scratch)
+    assert done == ["0002", "0003", "0004"]
+    cols = {r[0] for r in q(scratch, "SELECT column_name FROM information_schema.columns WHERE table_name='forecasts'")}
+    assert {"lo", "hi", "generated_at"}.issubset(cols)
+
+
 def test_partially_populated_scenario_is_never_overwritten(scratch):
     migrate.migrate(scratch)
     q(scratch, "INSERT INTO supplies (id, base_daily_demand, weather_sensitivity, criticality_weight) VALUES ('Only', 1, 0.1, 0.5)")

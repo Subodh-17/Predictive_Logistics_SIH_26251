@@ -147,9 +147,9 @@ def test_runtime_not_ready_message_is_generic(client, monkeypatch):
 # ------------------------------------------------------------------------------------------------------------------- rate limits
 def test_general_and_write_rate_limits(anon_client, operator_client, monkeypatch):
     monkeypatch.setattr(app_main, "_rate", SlidingWindowLimiter(5, 60))
-    codes = [anon_client.get("/api/dashboard").status_code for _ in range(8)]
+    codes = [anon_client.get("/api/auth/me").status_code for _ in range(8)]
     assert codes[:5] == [401] * 5 and codes[5:] == [429] * 3                           # throttled before authentication work is done
-    r = anon_client.get("/api/dashboard")
+    r = anon_client.get("/api/auth/me")
     assert r.json()["code"] == "RATE_LIMITED" and int(r.headers["retry-after"]) >= 1
     assert anon_client.get("/api/health/live").status_code == 200                      # probes are never throttled
     monkeypatch.setattr(app_main, "_rate", SlidingWindowLimiter(1000, 60))

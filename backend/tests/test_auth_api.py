@@ -189,7 +189,7 @@ def test_forged_expired_and_garbage_tokens_are_rejected(app):
              sec.issue_token(secret, user_id=1, role="admin", token_version=0, minutes=1, now=time.time() - 7200)[0],
              jwt.encode({"sub": "1", "role": "admin"}, key=None, algorithm="none")]
     for t in cases:
-        assert TestClient(app, headers={"Authorization": "Bearer " + t}).get("/api/dashboard").status_code == 401
+        assert TestClient(app, headers={"Authorization": "Bearer " + t}).get("/api/auth/me").status_code == 401
 
 
 def test_role_claim_in_token_is_not_trusted_the_database_role_wins(app, app_ctx):
@@ -206,7 +206,7 @@ def test_logout_revokes_the_token_server_side(app):
     tok = r.json()["access_token"]
     csrf = r.json()["csrf_token"]
     assert c.post("/api/auth/logout", headers={"X-CSRF-Token": csrf}).status_code == 200
-    assert TestClient(app, headers={"Authorization": "Bearer " + tok}).get("/api/dashboard").status_code == 401     # copied token is dead too
+    assert TestClient(app, headers={"Authorization": "Bearer " + tok}).get("/api/auth/me").status_code == 401     # copied token is dead too
     # restore a working session for the remaining tests in this module
     assert login(app, "t_operator")[1].status_code == 200
 
@@ -221,7 +221,7 @@ def test_change_password_revokes_old_tokens_and_enforces_policy(app, client):
     assert c.post("/api/auth/change-password", json={"current_password": "Initial-pass-1234", "new_password": "short"}, headers=h).status_code == 422
     ok = c.post("/api/auth/change-password", json={"current_password": "Initial-pass-1234", "new_password": "New-pass-98765"}, headers=h)
     assert ok.status_code == 200
-    assert TestClient(app, headers={"Authorization": "Bearer " + old}).get("/api/dashboard").status_code == 401
+    assert TestClient(app, headers={"Authorization": "Bearer " + old}).get("/api/auth/me").status_code == 401
     assert login(app, "t_pwchange", "Initial-pass-1234")[1].status_code == 401
     assert login(app, "t_pwchange", "New-pass-98765")[1].status_code == 200
 
